@@ -114,7 +114,7 @@
         <!-- Dashboard / Student View -->
         <div id="dashboard-view">
             <header class="flex flex-col md:flex-row justify-between items-center mb-6">
-                <h1 class="text-5xl font-bold main-title">🎮 POINT COLLECTOR</h1>
+                <h1 class="text-5xl font-bold main-title">🎮 ระบบเก็บสะสมแต้ม</h1>
                 <div class="mt-4 md:mt-0 flex items-center space-x-2">
                      <button id="rules-btn" class="bg-white hover:bg-gray-100 text-slate-600 font-semibold py-2 px-4 rounded-lg shadow-sm border border-slate-200 transition-all duration-300 hover:transform hover:-translate-y-0.5">📜 กติกา</button>
                     <!-- Login Button for Guests/Students -->
@@ -343,6 +343,13 @@
         const classModalStudentList = document.getElementById('class-modal-student-list');
         const classModalAddStudentBtn = document.getElementById('class-modal-add-student-btn');
         const avatars = ['🐵','🐶','🦊','🐱','🦁','🐯','🐴','🦄','🦓','🐮','🐷','🐭','🐹','🐰','🐻','🐨','🐼','🐸','🐧'];
+        const badgeColors = [
+            'bg-pink-200 text-pink-800',
+            'bg-purple-200 text-purple-800',
+            'bg-indigo-200 text-indigo-800',
+            'bg-cyan-200 text-cyan-800',
+            'bg-teal-200 text-teal-800',
+        ];
 
         
         // --- State ---
@@ -499,11 +506,32 @@
             render();
         }
 
-        function getStudentBadge(points) {
-            if (points >= 100) return { text: '🔥 นักสะสมแต้มขั้นเทพ', class: 'bg-red-500 text-white' };
-            if (points >= 50) return { text: '⭐ ดาวรุ่ง', class: 'bg-yellow-400 text-yellow-800' };
-            if (points > 0) return { text: '⚡ มือใหม่ไฟแรง', class: 'bg-green-400 text-green-800' };
+        function getBadgeForStudent(student, rank = -1) {
+            // Top 3 Leaderboard Ranks get special titles
+            if (rank === 0) return { text: 'แรงไม่หยุดฉุดไม่อยู่', class: 'bg-gradient-to-r from-red-500 to-orange-500 text-white animate-pulse' };
+            if (rank === 1) return { text: 'ปล่อยให้คนอื่นขึ้นมาบ้าง', class: 'bg-gradient-to-r from-sky-400 to-cyan-400 text-white' };
+            if (rank === 2) return { text: 'หลีกทางให้คนอื่นแซงหน่อยก็ได้', class: 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white' };
+            
+            // Custom badge set by teacher (with random color)
+            if (student.customBadge) {
+                return { text: student.customBadge, class: getRandomBadgeClass(student.id) };
+            }
+            
+            // Automatic badge based on points
+            if (student.points >= 100) return { text: '🔥 นักสะสมแต้มขั้นเทพ', class: 'bg-red-500 text-white' };
+            if (student.points >= 50) return { text: '⭐ ดาวรุ่ง', class: 'bg-yellow-400 text-yellow-800' };
+            if (student.points > 0) return { text: '⚡ มือใหม่ไฟแรง', class: 'bg-green-400 text-green-800' };
+            
             return { text: '', class: '' };
+        }
+        
+        function getRandomBadgeClass(studentId) {
+            let hash = 0;
+            for (let i = 0; i < studentId.length; i++) {
+                hash = studentId.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash % badgeColors.length);
+            return badgeColors[index];
         }
 
         function getAvatarForStudent(studentId) {
@@ -571,18 +599,18 @@
             studentsToDisplay.forEach((student, index) => {
                 const row = document.createElement('tr');
                 const fullName = `${student.prefix || ''}${student.firstName || ''} ${student.lastName || ''}`;
-                const badge = getStudentBadge(student.points);
-                const zebraClass = index % 2 !== 0 ? 'bg-violet-50' : 'bg-white';
                 
                 if (isLeaderboard) {
+                    const badge = getBadgeForStudent(student, index);
                     let rankDisplay = index + 1;
                     let rankClass = '';
-                    if(index === 0) { rankDisplay = '🥇'; rankClass = 'rank-1'; }
-                    if(index === 1) { rankDisplay = '🥈'; rankClass = 'rank-2'; }
-                    if(index === 2) { rankDisplay = '🥉'; rankClass = 'rank-3'; }
-                    row.className = `border-b border-slate-200 hover:scale-[1.02] hover:shadow-md transition-all duration-200 ${rankClass || zebraClass}`;
+                    let flameClass = '';
+                    if(index === 0) { rankDisplay = '🥇'; rankClass = 'rank-1'; flameClass = 'flaming-gold';}
+                    if(index === 1) { rankDisplay = '🥈'; rankClass = 'rank-2'; flameClass = 'flaming-silver';}
+                    if(index === 2) { rankDisplay = '🥉'; rankClass = 'rank-3'; flameClass = 'flaming-bronze';}
+                    row.className = `border-b border-slate-200 hover:shadow-lg transition-all duration-200 ${rankClass || (index % 2 !== 0 ? 'bg-violet-50' : 'bg-white')}`;
                     row.innerHTML = `
-                        <td class="p-3 font-bold text-center">${rankDisplay}</td>
+                        <td class="p-3 font-bold text-center ${flameClass}">${rankDisplay}</td>
                         <td class="p-3 font-medium text-slate-800 flex items-center gap-3">
                             <span class="text-2xl">${getAvatarForStudent(student.id)}</span>
                             <div>
@@ -597,10 +625,17 @@
                         </td>
                     `;
                 } else {
-                     row.className = `border-b border-slate-200 hover:scale-[1.02] hover:shadow-md transition-all duration-200 ${zebraClass}`;
+                     const badge = getBadgeForStudent(student, -1);
+                     let flameClass = '';
+                     if (state.classSort.key === 'points' && state.classSort.order === 'desc' && index < 3) {
+                         if (index === 0) flameClass = 'flaming-gold';
+                         if (index === 1) flameClass = 'flaming-silver';
+                         if (index === 2) flameClass = 'flaming-bronze';
+                     }
+                     row.className = `border-b border-slate-200 hover:shadow-lg transition-all duration-200 ${(index % 2 !== 0 ? 'bg-violet-50' : 'bg-white')}`;
                      row.innerHTML = `
                         <td class="p-3 text-2xl">${getAvatarForStudent(student.id)}</td>
-                        <td class="p-3">${student.no}</td>
+                        <td class="p-3 ${flameClass}">${student.no}</td>
                         <td class="p-3 font-medium text-slate-800">
                             ${fullName}
                             ${badge.text ? `<span class="text-xs font-semibold px-2 py-1 rounded-full ml-2 ${badge.class}">${badge.text}</span>` : ''}
@@ -729,7 +764,9 @@
                         prefix: gsStudent.prefix,
                         firstName: gsStudent.firstName,
                         lastName: gsStudent.lastName,
-                        class: className, points: gsStudent.points || 0, history: gsStudent.history || []
+                        class: className, points: gsStudent.points || 0,
+                        customBadge: gsStudent.customBadge || '',
+                        history: gsStudent.history || []
                     };
                 });
             });
@@ -907,18 +944,22 @@
                     `</div>` +
                     `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
                     `<label for="swal-input4" class="col-span-1">นามสกุล:</label><input id="swal-input4" class="swal2-input col-span-2" placeholder="นามสกุล" value="${student.lastName || ''}">` +
+                    `</div>`+
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
+                    `<label for="swal-input5" class="col-span-1">ฉายา:</label><input id="swal-input5" class="swal2-input col-span-2" placeholder="(ว่าง=อัตโนมัติ)" value="${student.customBadge || ''}">` +
                     `</div>`,
                 focusConfirm: false,
                 preConfirm: () => [
                     document.getElementById('swal-input1').value,
                     document.getElementById('swal-input2').value,
                     document.getElementById('swal-input3').value,
-                    document.getElementById('swal-input4').value
+                    document.getElementById('swal-input4').value,
+                    document.getElementById('swal-input5').value
                 ]
             });
 
             if (formValues) {
-                const [newNo, newPrefix, newFirstName, newLastName] = formValues;
+                const [newNo, newPrefix, newFirstName, newLastName, newStudentBadge] = formValues;
                 if (!newNo || !newFirstName || !newLastName) {
                     Swal.fire('ผิดพลาด', 'กรุณากรอก เลขที่, ชื่อ และนามสกุลให้ครบ', 'error');
                     return;
@@ -936,7 +977,8 @@
                     const payload = { 
                         action: 'editStudent', className: student.class, 
                         oldStudentNo: student.no, newStudentNo: newNo,
-                        newStudentPrefix: newPrefix, newStudentFirstName: newFirstName, newStudentLastName: newLastName
+                        newStudentPrefix: newPrefix, newStudentFirstName: newFirstName, newStudentLastName: newLastName,
+                        newStudentBadge: newStudentBadge
                     };
                     const response = await fetch(APP_SCRIPT_URL, {
                         method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -947,7 +989,7 @@
                     if (result.status === 'success') {
                         // Update state
                         delete state.students[studentId];
-                        state.students[newId] = { ...student, id: newId, no: newNo, prefix: newPrefix, firstName: newFirstName, lastName: newLastName };
+                        state.students[newId] = { ...student, id: newId, no: newNo, prefix: newPrefix, firstName: newFirstName, lastName: newLastName, customBadge: newStudentBadge };
                         saveState();
                         // Refresh the modal content
                         openClassManagementModal(student.class);
@@ -1015,7 +1057,7 @@
                         state.students[studentId] = {
                             id: studentId, no: studentNo, 
                             prefix: prefix, firstName: firstName, lastName: lastName,
-                            class: className, points: 0, history: []
+                            class: className, points: 0, history: [], customBadge: ''
                         };
                         saveState();
                         openClassManagementModal(className); // Refresh modal
