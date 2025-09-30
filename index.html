@@ -121,7 +121,7 @@
 <body class="text-gray-700">
 
     <!-- Main Container -->
-    <div id="app" class="container mx-auto p-4 md:p-6 max-w-5xl">
+    <div id="app" class="container mx-auto p-4 md:p-6 max-w-7xl">
         
         <!-- Login View -->
         <div id="login-view" class="hidden">
@@ -861,10 +861,23 @@
             const { value: formValues } = await Swal.fire({
                 title: `แก้ไขข้อมูล: ${fullName}`,
                 html:
-                    `<input id="swal-input1" class="swal2-input" placeholder="เลขที่" value="${student.no}">` +
-                    `<input id="swal-input2" class="swal2-input" placeholder="คำนำหน้า (เช่น ด.ช.)" value="${student.prefix || ''}">` +
-                    `<input id="swal-input3" class="swal2-input" placeholder="ชื่อ" value="${student.firstName || ''}">` +
-                    `<input id="swal-input4" class="swal2-input" placeholder="นามสกุล" value="${student.lastName || ''}">`,
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left">` +
+                    `<label for="swal-input1" class="col-span-1">เลขที่:</label><input id="swal-input1" class="swal2-input col-span-2" placeholder="เลขที่" value="${student.no}">` +
+                    `</div>` +
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
+                    `<label for="swal-input2" class="col-span-1">คำนำหน้า:</label><select id="swal-input2" class="swal2-select col-span-2">
+                        <option value="ด.ช." ${student.prefix === 'ด.ช.' ? 'selected' : ''}>เด็กชาย</option>
+                        <option value="ด.ญ." ${student.prefix === 'ด.ญ.' ? 'selected' : ''}>เด็กหญิง</option>
+                        <option value="นาย" ${student.prefix === 'นาย' ? 'selected' : ''}>นาย</option>
+                        <option value="น.ส." ${student.prefix === 'น.ส.' ? 'selected' : ''}>นางสาว</option>
+                    </select>` +
+                    `</div>` +
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
+                    `<label for="swal-input3" class="col-span-1">ชื่อ:</label><input id="swal-input3" class="swal2-input col-span-2" placeholder="ชื่อ" value="${student.firstName || ''}">` +
+                    `</div>` +
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
+                    `<label for="swal-input4" class="col-span-1">นามสกุล:</label><input id="swal-input4" class="swal2-input col-span-2" placeholder="นามสกุล" value="${student.lastName || ''}">` +
+                    `</div>`,
                 focusConfirm: false,
                 preConfirm: () => [
                     document.getElementById('swal-input1').value,
@@ -921,10 +934,24 @@
              const { value: formValues } = await Swal.fire({
                 title: `เพิ่มนักเรียนในห้อง ${className}`,
                 html:
-                    `<input id="swal-input1" class="swal2-input" placeholder="เลขที่">` +
-                    `<input id="swal-input2" class="swal2-input" placeholder="คำนำหน้า (เช่น ด.ช.)">` +
-                    `<input id="swal-input3" class="swal2-input" placeholder="ชื่อ">` +
-                    `<input id="swal-input4" class="swal2-input" placeholder="นามสกุล">`,
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left">` +
+                    `<label for="swal-input1" class="col-span-1">เลขที่:</label><input id="swal-input1" class="swal2-input col-span-2" placeholder="เลขที่">` +
+                    `</div>` +
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
+                    `<label for="swal-input2" class="col-span-1">คำนำหน้า:</label><select id="swal-input2" class="swal2-select col-span-2">
+                        <option value="">--เลือกคำนำหน้า--</option>
+                        <option value="ด.ช.">เด็กชาย</option>
+                        <option value="ด.ญ.">เด็กหญิง</option>
+                        <option value="นาย">นาย</option>
+                        <option value="น.ส.">นางสาว</option>
+                    </select>` +
+                    `</div>` +
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
+                    `<label for="swal-input3" class="col-span-1">ชื่อ:</label><input id="swal-input3" class="swal2-input col-span-2" placeholder="ชื่อ">` +
+                    `</div>` +
+                    `<div class="grid grid-cols-3 items-center gap-2 text-left mt-3">` +
+                    `<label for="swal-input4" class="col-span-1">นามสกุล:</label><input id="swal-input4" class="swal2-input col-span-2" placeholder="นามสกุล">` +
+                    `</div>`,
                 focusConfirm: false,
                 preConfirm: () => [
                     document.getElementById('swal-input1').value,
