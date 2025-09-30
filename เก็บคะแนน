@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสะสมแต้ม - The Points Collector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f0f7ff;
+            /* New, more engaging background pattern */
+            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a5d8ff' fill-opacity='0.4'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c-5.523 0-10-4.477-10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c-5.523 0-10-4.477-10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .soft-mint { background-color: #e6fff5; }
+        .soft-pink { background-color: #ffe6f0; }
+        .soft-blue { background-color: #e6f3ff; }
+        .soft-gold { background-color: #fffbeb; }
+        .btn-primary {
+            background-color: #60a5fa; /* Blue-400 */
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #3b82f6; /* Blue-500 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            animation-name: fadeIn;
+            animation-duration: 0.4s
+        }
+        .modal-content {
+            margin: 10% auto;
+            background-color: #fff;
+            position: relative;
+            padding: 20px;
+            outline: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+            animation-name: slideIn;
+            animation-duration: 0.4s
+        }
+        @keyframes slideIn {
+            from {transform: translateY(50px); opacity: 0}
+            to {transform: translateY(0); opacity: 1}
+        }
+        @keyframes fadeIn {
+            from {opacity: 0} 
+            to {opacity: 1}
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+        .admin-section {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .main-title {
+            animation: text-focus-in 1s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
+        }
+        @keyframes text-focus-in {
+          0% {
+            filter: blur(12px);
+            opacity: 0;
+          }
+          100% {
+            filter: blur(0px);
+            opacity: 1;
+          }
+        }
+        .rank-1 { background-color: #fef9c3; } /* yellow-100 */
+        .rank-2 { background-color: #f1f5f9; } /* slate-100 */
+        .rank-3 { background-color: #ffedd5; } /* orange-100 */
+        .filter-btn-active {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border-color: #2563eb !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        /* Custom scrollbar for tab container */
+        #class-tabs::-webkit-scrollbar {
+            height: 6px;
+        }
+        #class-tabs::-webkit-scrollbar-track {
+            background: #e0e7ff; /* indigo-100 */
+            border-radius: 10px;
+        }
+        #class-tabs::-webkit-scrollbar-thumb {
+            background: #a5b4fc; /* indigo-300 */
+            border-radius: 10px;
+        }
+        #class-tabs::-webkit-scrollbar-thumb:hover {
+            background: #818cf8; /* indigo-400 */
+        }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <!-- Main Container -->
+    <div id="app" class="container mx-auto p-4 md:p-6 max-w-5xl">
+        
+        <!-- Login View -->
+        <div id="login-view" class="hidden">
+            <div class="bg-white p-8 rounded-2xl shadow-lg text-center soft-mint">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">🧑‍🏫 สำหรับคุณครู</h1>
+                <p class="text-gray-600 mb-6">กรุณาเข้าสู่ระบบเพื่อจัดการข้อมูล</p>
+                <input type="password" id="password" class="w-full max-w-xs p-3 border border-gray-300 rounded-lg mb-4 text-center" placeholder="กรุณาใส่รหัสผ่าน">
+                <button id="login-btn" class="w-full max-w-xs btn-primary font-semibold py-3 px-4 rounded-lg shadow-md">เข้าสู่ระบบ</button>
+                <button id="back-to-scoreboard-btn" class="w-full max-w-xs bg-gray-400 hover:bg-gray-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md mt-2 transition-all duration-300 hover:transform hover:-translate-y-0.5">กลับไปหน้าคะแนน</button>
+            </div>
+        </div>
+
+        <!-- Dashboard / Student View -->
+        <div id="dashboard-view">
+            <header class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800 main-title">🌟 แต้มสะสมนักเรียน</h1>
+                <div class="mt-4 md:mt-0 flex items-center space-x-2">
+                     <button id="rules-btn" class="bg-white hover:bg-gray-100 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-300 hover:transform hover:-translate-y-0.5">📜 กติกา</button>
+                    <!-- Login Button for Guests/Students -->
+                    <button id="show-login-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-300 hover:transform hover:-translate-y-0.5">🧑‍🏫 สำหรับครู</button>
+                    <!-- Teacher Controls Dropdown -->
+                    <div id="teacher-controls" class="hidden relative inline-block text-left">
+                        <div>
+                            <button type="button" id="teacher-menu-btn" class="inline-flex justify-center w-full rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-all duration-300">
+                                เมนูครู 🧑‍🏫
+                                <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="teacher-menu-dropdown" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
+                            <div class="py-1">
+                                <a href="#" id="fetch-gs-btn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 flex items-center">🔄<span class="ml-2">เรียกข้อมูล</span></a>
+                                <a href="#" id="admin-panel-btn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 flex items-center">⚙️<span class="ml-2">จัดการข้อมูล</span></a>
+                                <a href="#" id="logout-btn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 flex items-center">🚪<span class="ml-2">ออกจากระบบ</span></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Tabs for Classes -->
+            <div id="class-tabs" class="flex items-center gap-3 mb-6 pb-3 overflow-x-auto">
+                <!-- Tabs will be generated here -->
+            </div>
+
+            <!-- Leaderboard View Toggle -->
+            <div id="leaderboard-filters" class="hidden mb-4 text-center">
+                <div class="inline-flex rounded-lg shadow-md">
+                    <button id="filter-individual-btn" class="px-5 py-2 text-sm font-semibold bg-white border border-gray-300 text-gray-700 rounded-l-lg transition-all duration-300 hover:bg-gray-100 hover:-translate-y-0.5 flex items-center gap-2">
+                        🧑‍🎓 อันดับนักเรียน
+                    </button>
+                    <button id="filter-class-btn" class="px-5 py-2 text-sm font-semibold bg-white border-t border-b border-r border-gray-300 text-gray-700 rounded-r-lg transition-all duration-300 hover:bg-gray-100 hover:-translate-y-0.5 flex items-center gap-2">
+                        🏫 อันดับห้องเรียน
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Class Sort Toggle -->
+            <div id="class-sort-filters" class="hidden mb-4 text-center">
+                <div class="inline-flex rounded-lg shadow-md">
+                    <button id="sort-by-no-btn" class="px-5 py-2 text-sm font-semibold bg-white border border-gray-300 text-gray-700 rounded-l-lg transition-all duration-300 hover:bg-gray-100 hover:-translate-y-0.5 flex items-center gap-2">
+                        <!-- Content generated by JS -->
+                    </button>
+                    <button id="sort-by-points-btn" class="px-5 py-2 text-sm font-semibold bg-white border-t border-b border-r border-gray-300 text-gray-700 rounded-r-lg transition-all duration-300 hover:bg-gray-100 hover:-translate-y-0.5 flex items-center gap-2">
+                        <!-- Content generated by JS -->
+                    </button>
+                </div>
+            </div>
+
+            <!-- Student Table -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg soft-pink">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead id="table-header">
+                            <!-- Header will be generated here -->
+                        </thead>
+                        <tbody id="student-list">
+                            <!-- Student rows will be generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Panel View -->
+        <div id="admin-view" class="hidden soft-blue p-6 rounded-2xl shadow-lg">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">🛠️ หน้าจัดการสำหรับครู</h2>
+                <button id="back-to-dashboard-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all hover:transform hover:-translate-y-0.5"> &lt; กลับไป Dashboard</button>
+            </div>
+
+            <!-- Point Management -->
+            <div class="admin-section">
+                <h3 class="font-semibold text-xl mb-4">จัดการแต้ม ➕➖</h3>
+                <div class="mb-4 text-center">
+                    <div class="inline-flex rounded-lg shadow-md">
+                        <button id="mode-single-btn" class="px-5 py-2 text-sm font-semibold bg-white border border-gray-300 text-gray-700 rounded-l-lg transition-all duration-300 hover:bg-gray-100 hover:-translate-y-0.5 flex items-center gap-2">
+                            👤 รายคน
+                        </button>
+                        <button id="mode-bulk-btn" class="px-5 py-2 text-sm font-semibold bg-white border-t border-b border-r border-gray-300 text-gray-700 rounded-r-lg transition-all duration-300 hover:bg-gray-100 hover:-translate-y-0.5 flex items-center gap-2">
+                            👥 แบบกลุ่ม
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                     <select id="class-select-for-points" class="p-2 border rounded-lg w-full">
+                        <option value="">-- 1. เลือกชั้นเรียนก่อน --</option>
+                    </select>
+                    <!-- Search is for single mode only -->
+                    <input type="text" id="search-student-admin" class="p-2 border rounded-lg w-full" placeholder="🔍 ค้นหาเพื่อกรองรายชื่อ...">
+                </div>
+                
+                <!-- Single Student Selector -->
+                <div id="single-student-selector" class="mb-4">
+                    <select id="student-select-for-points" class="p-2 border rounded-lg w-full">
+                        <option value="">-- 2. เลือกนักเรียน --</option>
+                    </select>
+                </div>
+
+                <!-- Bulk Student Selector -->
+                <div id="bulk-student-selector" class="hidden mb-4 p-2 border rounded-lg bg-white max-h-48 overflow-y-auto">
+                    <div class="mb-2">
+                        <input type="checkbox" id="select-all-students-checkbox" class="mr-2">
+                        <label for="select-all-students-checkbox" class="font-semibold">เลือกทั้งหมด / ยกเลิกทั้งหมด</label>
+                    </div>
+                    <div id="bulk-student-list" class="space-y-1">
+                        <!-- Checkboxes will be generated here -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="number" id="points-input" class="p-2 border rounded-lg" placeholder="จำนวนแต้ม (ใส่เลขบวกเท่านั้น)" min="0">
+                    <input type="text" id="reason-input" class="p-2 border rounded-lg" placeholder="เหตุผล (เช่น ส่งงาน)">
+                </div>
+                <div class="mt-4 text-center space-x-2">
+                    <button id="add-points-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-all hover:transform hover:-translate-y-0.5">เพิ่มแต้ม</button>
+                    <button id="remove-points-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all hover:transform hover:-translate-y-0.5">ลดแต้ม</button>
+                </div>
+            </div>
+
+            <!-- Class & Student Management -->
+            <div class="admin-section">
+                <h3 class="font-semibold text-xl mb-3">จัดการชั้นเรียนและนักเรียน 🏫</h3>
+                <div class="mb-4">
+                    <h4 class="font-semibold mb-2">เพิ่มชั้นเรียนใหม่</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-class-name" class="p-2 border rounded-lg w-full" placeholder="ชื่อชั้นเรียน (เช่น ม.1/5)">
+                        <button id="add-class-btn" class="btn-primary font-semibold py-2 px-4 rounded-lg whitespace-nowrap">เพิ่มชั้นเรียน</button>
+                    </div>
+                </div>
+                <div id="class-management-buttons" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- Class buttons will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="modal-student-name" class="text-xl font-bold">ประวัติคะแนน</h3>
+                <span class="close-btn text-3xl font-bold cursor-pointer transition-transform hover:rotate-90">&times;</span>
+            </div>
+            <div id="modal-body" class="py-4 max-h-80 overflow-y-auto">
+                <!-- History items will be here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Class Management Modal -->
+    <div id="class-management-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="class-modal-title" class="text-xl font-bold">จัดการนักเรียน</h3>
+                <span class="close-btn text-3xl font-bold cursor-pointer transition-transform hover:rotate-90">&times;</span>
+            </div>
+            <div class="py-4 max-h-96 overflow-y-auto">
+                <ul id="class-modal-student-list" class="space-y-2 mb-4">
+                    <!-- Student list will be here -->
+                </ul>
+                <button id="class-modal-add-student-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-300 hover:transform hover:-translate-y-0.5">+ เพิ่มนักเรียนในห้องนี้</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="modal">
+        <div class="modal-content soft-gold">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-300">
+                <h3 class="text-xl font-bold">📜 กติกาการให้คะแนน</h3>
+                <span class="close-btn text-3xl font-bold cursor-pointer transition-transform hover:rotate-90">&times;</span>
+            </div>
+            <div id="rules-body" class="py-4 space-y-3">
+                <p class="font-semibold">ตัวอย่างกติกา:</p>
+                <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    <li><span class="font-semibold text-green-600">✅ +10 คะแนน:</span> ส่งงานตรงเวลา</li>
+                    <li><span class="font-semibold text-green-600">✅ +5 คะแนน:</span> มีส่วนร่วมในชั้นเรียน</li>
+                    <li><span class="font-semibold text-green-600">✅ +20 คะแนน:</span> ช่วยเหลือเพื่อน, ทำความดี</li>
+                    <li><span class="font-semibold text-red-600">❌ -10 คะแนน:</span> ส่งงานช้า</li>
+                    <li><span class="font-semibold text-red-600">❌ -5 คะแนน:</span> ไม่เตรียมอุปกรณ์การเรียน</li>
+                </ul>
+                <p class="text-sm text-gray-500 mt-4">หมายเหตุ: คุณครูสามารถปรับเปลี่ยนรายละเอียดกติกาเหล่านี้ได้ตามความเหมาะสม</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPCtXfigpfdXVVAKkKhX_jzgSfU922lSftrIr80gSte8ZRufK72PMjARudsJ1wSMZ3/exec';
+        const LEADERBOARD_KEY = '🏆 Leaderboard รวม';
+        const CLASS_LEADERBOARD_KEY = '🏫 อันดับห้องเรียน';
+        
+        // --- DOM Elements ---
+        const loginView = document.getElementById('login-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const adminView = document.getElementById('admin-view');
+        const studentList = document.getElementById('student-list');
+        const tableHeader = document.getElementById('table-header');
+        const classTabs = document.getElementById('class-tabs');
+        const historyModal = document.getElementById('history-modal');
+        const rulesModal = document.getElementById('rules-modal');
+        const classManagementModal = document.getElementById('class-management-modal');
+        const modalStudentName = document.getElementById('modal-student-name');
+        const modalBody = document.getElementById('modal-body');
+        const teacherMenuBtn = document.getElementById('teacher-menu-btn');
+        const teacherMenuDropdown = document.getElementById('teacher-menu-dropdown');
+        const leaderboardFilters = document.getElementById('leaderboard-filters');
+        const filterIndividualBtn = document.getElementById('filter-individual-btn');
+        const filterClassBtn = document.getElementById('filter-class-btn');
+        const classSortFilters = document.getElementById('class-sort-filters');
+        const sortByNoBtn = document.getElementById('sort-by-no-btn');
+        const sortByPointsBtn = document.getElementById('sort-by-points-btn');
+        const modeSingleBtn = document.getElementById('mode-single-btn');
+        const modeBulkBtn = document.getElementById('mode-bulk-btn');
+        const singleStudentSelector = document.getElementById('single-student-selector');
+        const bulkStudentSelector = document.getElementById('bulk-student-selector');
+        const bulkStudentList = document.getElementById('bulk-student-list');
+        const selectAllCheckbox = document.getElementById('select-all-students-checkbox');
+        const classManagementButtons = document.getElementById('class-management-buttons');
+        const classModalTitle = document.getElementById('class-modal-title');
+        const classModalStudentList = document.getElementById('class-modal-student-list');
+        const classModalAddStudentBtn = document.getElementById('class-modal-add-student-btn');
+
+        
+        // --- State ---
+        let state = {
+            students: {}, // { id, no, prefix, firstName, lastName, class, points, history: [] }
+            classes: [],  // ["ม.1/1", "ม.1/3"]
+            activeClass: null,
+            leaderboardView: 'individual', // 'individual' or 'class'
+            classSort: { key: 'no', order: 'asc' }, // { key: 'no' | 'points', order: 'asc' | 'desc' }
+            loggedIn: false,
+            adminPointMode: 'single' // 'single' or 'bulk'
+        };
+
+        // --- App Logic ---
+        function initializeApp() {
+            loadState();
+            state.activeClass = LEADERBOARD_KEY; // Always start with the leaderboard
+            showDashboard();
+            if (state.classes.length === 0) {
+                fetchFromGoogleSheet();
+            }
+        }
+
+        function loadState() {
+            const savedState = localStorage.getItem('studentPointsApp');
+            if (savedState) {
+                state = JSON.parse(savedState);
+                if (!state.leaderboardView) state.leaderboardView = 'individual';
+                if (!state.classSort) state.classSort = { key: 'no', order: 'asc' };
+                if (!state.adminPointMode) state.adminPointMode = 'single';
+                Object.values(state.students).forEach(student => {
+                    if (!student.history) student.history = [];
+                });
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('studentPointsApp', JSON.stringify(state));
+        }
+
+        function render() {
+            renderTabs();
+            renderDynamicControls();
+            renderStudentList();
+            updateUIVisibility();
+        }
+
+        function updateUIVisibility() {
+            const teacherControls = document.getElementById('teacher-controls');
+            const showLoginBtn = document.getElementById('show-login-btn');
+            if (state.loggedIn) {
+                teacherControls.classList.remove('hidden');
+                showLoginBtn.classList.add('hidden');
+            } else {
+                teacherControls.classList.add('hidden');
+                teacherMenuDropdown.classList.add('hidden');
+                showLoginBtn.classList.remove('hidden');
+            }
+        }
+
+        function renderTabs() {
+            classTabs.innerHTML = '';
+            const baseTabClass = 'flex-shrink-0 px-4 py-2 font-semibold transition-all duration-300 rounded-lg shadow-md border';
+            
+            // Render leaderboard tab
+            const leaderboardTab = document.createElement('button');
+            leaderboardTab.innerHTML = LEADERBOARD_KEY;
+            const activeLeaderboardClass = 'bg-amber-400 text-white border-amber-500 transform -translate-y-1 shadow-lg';
+            const inactiveLeaderboardClass = 'bg-white text-amber-700 border-gray-200 hover:bg-amber-50 hover:-translate-y-0.5';
+            leaderboardTab.className = `${baseTabClass} ${state.activeClass === LEADERBOARD_KEY ? activeLeaderboardClass : inactiveLeaderboardClass}`;
+            leaderboardTab.onclick = () => {
+                state.activeClass = LEADERBOARD_KEY;
+                render();
+            };
+            classTabs.appendChild(leaderboardTab);
+
+            // Render class tabs
+            state.classes.forEach(className => {
+                const tab = document.createElement('button');
+                tab.textContent = className;
+                const activeClass = 'bg-blue-500 text-white border-blue-600 transform -translate-y-1 shadow-lg';
+                const inactiveClass = 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100 hover:-translate-y-0.5';
+                tab.className = `${baseTabClass} ${state.activeClass === className ? activeClass : inactiveClass}`;
+                tab.onclick = () => { 
+                    state.activeClass = className;
+                    render();
+                };
+                classTabs.appendChild(tab);
+            });
+        }
+        
+        function renderDynamicControls() {
+            const isLeaderboard = state.activeClass === LEADERBOARD_KEY;
+            
+            leaderboardFilters.classList.toggle('hidden', !isLeaderboard);
+            classSortFilters.classList.toggle('hidden', isLeaderboard);
+
+            if (isLeaderboard) {
+                filterIndividualBtn.classList.toggle('filter-btn-active', state.leaderboardView === 'individual');
+                filterClassBtn.classList.toggle('filter-btn-active', state.leaderboardView === 'class');
+            } else {
+                sortByNoBtn.classList.toggle('filter-btn-active', state.classSort.key === 'no');
+                sortByPointsBtn.classList.toggle('filter-btn-active', state.classSort.key === 'points');
+                
+                const noBtnText = "🔢 เรียงตามเลขที่";
+                const pointsBtnText = "✨ เรียงตามแต้ม";
+                
+                sortByNoBtn.innerHTML = noBtnText;
+                sortByPointsBtn.innerHTML = pointsBtnText;
+
+                const sortIcon = state.classSort.order === 'asc' ? '🔼' : '🔽';
+
+                if (state.classSort.key === 'no') {
+                    sortByNoBtn.innerHTML = `${noBtnText} ${sortIcon}`;
+                } else {
+                    sortByPointsBtn.innerHTML = `${pointsBtnText} ${sortIcon}`;
+                }
+            }
+        }
+
+        function handleSort(key) {
+            if (state.classSort.key === key) {
+                state.classSort.order = state.classSort.order === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.classSort.key = key;
+                state.classSort.order = key === 'no' ? 'asc' : 'desc'; // Default sort order
+            }
+            saveState();
+            render();
+        }
+
+        function renderStudentList() {
+            studentList.innerHTML = '';
+            const isLeaderboard = state.activeClass === LEADERBOARD_KEY;
+
+            if (isLeaderboard && state.leaderboardView === 'class') {
+                renderClassLeaderboard();
+                return;
+            }
+
+            // Set table headers
+            if(isLeaderboard) {
+                tableHeader.innerHTML = `
+                    <tr class="border-b-2 border-gray-300">
+                        <th class="p-3">อันดับ</th>
+                        <th class="p-3">ชื่อ - สกุล</th>
+                        <th class="p-3">ชั้นเรียน</th>
+                        <th class="p-3 text-center">แต้มสะสม ✨</th>
+                        <th class="p-3 text-center">ดูประวัติ</th>
+                    </tr>`;
+            } else {
+                tableHeader.innerHTML = `
+                     <tr class="border-b-2 border-gray-300">
+                        <th class="p-3">เลขที่</th>
+                        <th class="p-3">ชื่อ - สกุล</th>
+                        <th class="p-3 text-center">แต้มสะสม ✨</th>
+                        <th class="p-3 text-center">ดูประวัติ</th>
+                    </tr>`;
+            }
+
+            // Get and sort students
+            let studentsToDisplay;
+            if (isLeaderboard) {
+                studentsToDisplay = Object.values(state.students).sort((a, b) => b.points - a.points);
+            } else {
+                studentsToDisplay = Object.values(state.students).filter(s => s.class === state.activeClass);
+                studentsToDisplay.sort((a, b) => {
+                    if (state.classSort.key === 'no') {
+                        const aNo = parseInt(a.no);
+                        const bNo = parseInt(b.no);
+                        return state.classSort.order === 'asc' ? aNo - bNo : bNo - aNo;
+                    } else { // points
+                        return state.classSort.order === 'asc' ? a.points - b.points : b.points - a.points;
+                    }
+                });
+            }
+
+            if (studentsToDisplay.length === 0) {
+                 studentList.innerHTML = '<tr><td colspan="5" class="p-4 text-center">ไม่พบข้อมูลนักเรียน</td></tr>';
+                 return;
+            }
+            
+            // Render rows
+            studentsToDisplay.forEach((student, index) => {
+                const row = document.createElement('tr');
+                const fullName = `${student.prefix || ''}${student.firstName || ''} ${student.lastName || ''}`;
+                
+                if (isLeaderboard) {
+                    let rankDisplay = index + 1;
+                    let rankClass = '';
+                    if(index === 0) { rankDisplay = '🥇'; rankClass = 'rank-1'; }
+                    if(index === 1) { rankDisplay = '🥈'; rankClass = 'rank-2'; }
+                    if(index === 2) { rankDisplay = '🥉'; rankClass = 'rank-3'; }
+                    row.className = `border-b hover:bg-gray-100 transition-all duration-300 ${rankClass}`;
+                    row.innerHTML = `
+                        <td class="p-3 font-bold text-center">${rankDisplay}</td>
+                        <td class="p-3 font-medium">${fullName}</td>
+                        <td class="p-3">${student.class}</td>
+                        <td class="p-3 text-center font-bold text-lg text-blue-600">${student.points}</td>
+                        <td class="p-3 text-center">
+                            <button class="view-history-btn bg-purple-500 hover:bg-purple-600 text-white text-sm py-1 px-3 rounded-full transition-transform hover:scale-110" data-id="${student.id}">📜 ดู</button>
+                        </td>
+                    `;
+                } else {
+                     row.className = 'border-b hover:bg-gray-100 transition-all duration-300';
+                     row.innerHTML = `
+                        <td class="p-3">${student.no}</td>
+                        <td class="p-3 font-medium">${fullName}</td>
+                        <td class="p-3 text-center font-bold text-lg text-blue-600">${student.points}</td>
+                        <td class="p-3 text-center">
+                            <button class="view-history-btn bg-purple-500 hover:bg-purple-600 text-white text-sm py-1 px-3 rounded-full transition-transform hover:scale-110" data-id="${student.id}">📜 ดู</button>
+                        </td>
+                    `;
+                }
+                studentList.appendChild(row);
+            });
+            
+            document.querySelectorAll('.view-history-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => showHistory(e.target.dataset.id));
+            });
+        }
+        
+        function renderClassLeaderboard() {
+            tableHeader.innerHTML = `
+                <tr class="border-b-2 border-gray-300">
+                    <th class="p-3">อันดับ</th>
+                    <th class="p-3">ห้องเรียน</th>
+                    <th class="p-3 text-center">คะแนนเฉลี่ย 📈</th>
+                    <th class="p-3 text-center">คะแนนรวม</th>
+                    <th class="p-3 text-center">จำนวนนักเรียน</th>
+                </tr>`;
+
+            const classData = {};
+            Object.values(state.students).forEach(student => {
+                const className = student.class;
+                if (!classData[className]) {
+                    classData[className] = { totalPoints: 0, studentCount: 0 };
+                }
+                classData[className].totalPoints += student.points;
+                classData[className].studentCount++;
+            });
+
+            const classRankings = Object.keys(classData).map(className => {
+                const data = classData[className];
+                const average = data.studentCount > 0 ? (data.totalPoints / data.studentCount) : 0;
+                return {
+                    className: className,
+                    totalPoints: data.totalPoints,
+                    studentCount: data.studentCount,
+                    avgPoints: parseFloat(average.toFixed(1))
+                };
+            }).sort((a, b) => b.avgPoints - a.avgPoints);
+            
+            studentList.innerHTML = '';
+            if (classRankings.length === 0) {
+                studentList.innerHTML = '<tr><td colspan="5" class="p-4 text-center">ไม่มีข้อมูลห้องเรียน</td></tr>';
+                return;
+            }
+            
+            classRankings.forEach((classItem, index) => {
+                const row = document.createElement('tr');
+                let rankDisplay = index + 1;
+                let rankClass = '';
+                if(index === 0) { rankDisplay = '🥇'; rankClass = 'rank-1'; }
+                if(index === 1) { rankDisplay = '🥈'; rankClass = 'rank-2'; }
+                if(index === 2) { rankDisplay = '🥉'; rankClass = 'rank-3'; }
+                row.className = `border-b hover:bg-gray-100 transition-all duration-300 ${rankClass}`;
+                row.innerHTML = `
+                    <td class="p-3 font-bold text-center">${rankDisplay}</td>
+                    <td class="p-3 font-medium text-lg">${classItem.className}</td>
+                    <td class="p-3 text-center font-bold text-xl text-blue-600">${classItem.avgPoints}</td>
+                    <td class="p-3 text-center text-gray-600">${classItem.totalPoints}</td>
+                    <td class="p-3 text-center text-gray-600">${classItem.studentCount}</td>
+                `;
+                studentList.appendChild(row);
+            });
+        }
+        
+        function showHistory(studentId) {
+            const student = state.students[studentId];
+            if (!student) return;
+            
+            const fullName = `${student.prefix || ''}${student.firstName || ''} ${student.lastName || ''}`;
+            modalStudentName.textContent = `ประวัติคะแนน: ${fullName}`;
+            modalBody.innerHTML = '';
+
+            if (!student.history || student.history.length === 0) {
+                modalBody.innerHTML = '<p class="text-center text-gray-500">ยังไม่มีประวัติ</p>';
+            } else {
+                const list = document.createElement('ul');
+                [...student.history].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center p-2 border-b';
+                    const pointClass = item.points > 0 ? 'text-green-600' : 'text-red-600';
+                    const sign = item.points > 0 ? '+' : '';
+                    li.innerHTML = `
+                        <div>
+                            <p class="font-semibold">${item.reason}</p>
+                            <p class="text-sm text-gray-500">${new Date(item.date).toLocaleString('th-TH')}</p>
+                        </div>
+                        <div class="font-bold text-lg ${pointClass}">${sign}${item.points}</div>
+                    `;
+                    list.appendChild(li);
+                });
+                modalBody.appendChild(list);
+            }
+            historyModal.style.display = 'block';
+        }
+
+        // --- Data Fetching ---
+        function fetchFromGoogleSheet() {
+             Swal.fire({ title: 'กำลังดึงข้อมูล...', text: 'กรุณารอสักครู่ 🔄', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const script = document.createElement('script');
+            script.src = `${APP_SCRIPT_URL}?callback=handleGsData`;
+            document.body.appendChild(script);
+            script.onload = () => script.remove();
+            script.onerror = () => Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถเชื่อมต่อกับ Google Sheet ได้', 'error');
+        }
+        
+        window.handleGsData = function(data) {
+            if (data.error) { Swal.fire('เกิดข้อผิดพลาด!', data.error, 'error'); return; }
+            const newClasses = Object.keys(data).sort();
+            state.classes = newClasses;
+            state.students = {};
+            newClasses.forEach(className => {
+                data[className].forEach(gsStudent => {
+                    const studentId = `${className}-${gsStudent.no}`;
+                    state.students[studentId] = {
+                        id: studentId, no: gsStudent.no, 
+                        prefix: gsStudent.prefix,
+                        firstName: gsStudent.firstName,
+                        lastName: gsStudent.lastName,
+                        class: className, points: gsStudent.points || 0, history: gsStudent.history || []
+                    };
+                });
+            });
+
+            if (state.activeClass !== LEADERBOARD_KEY && !newClasses.includes(state.activeClass)) {
+                state.activeClass = LEADERBOARD_KEY;
+            }
+            
+            saveState();
+            render();
+            Swal.fire('สำเร็จ!', 'ดึงข้อมูลจาก Google Sheet เรียบร้อยแล้ว', 'success');
+        }
+
+        // --- View Management ---
+        function showLogin() {
+            loginView.classList.remove('hidden');
+            dashboardView.classList.add('hidden');
+            adminView.classList.add('hidden');
+        }
+        function showDashboard() {
+            loginView.classList.add('hidden');
+            dashboardView.classList.remove('hidden');
+            adminView.classList.add('hidden');
+            render();
+        }
+        function showAdminPanel() {
+            loginView.classList.add('hidden');
+            dashboardView.classList.add('hidden');
+            adminView.classList.remove('hidden');
+            renderAdminPanel();
+        }
+
+        // --- Admin Functions ---
+        function renderAdminPanel() {
+            updatePointManagementUI();
+            renderClassManagementButtons();
+        }
+        
+        function updatePointManagementUI() {
+            const isBulk = state.adminPointMode === 'bulk';
+            modeSingleBtn.classList.toggle('filter-btn-active', !isBulk);
+            modeBulkBtn.classList.toggle('filter-btn-active', isBulk);
+
+            singleStudentSelector.classList.toggle('hidden', isBulk);
+            bulkStudentSelector.classList.toggle('hidden', !isBulk);
+            document.getElementById('search-student-admin').classList.toggle('hidden', isBulk);
+            populatePointManagementSelectors();
+        }
+
+        function populatePointManagementSelectors() {
+            const classSelect = document.getElementById('class-select-for-points');
+            const studentSelect = document.getElementById('student-select-for-points');
+            const currentClass = classSelect.value;
+            
+            classSelect.innerHTML = '<option value="">-- 1. เลือกชั้นเรียนก่อน --</option>';
+            state.classes.forEach(c => classSelect.add(new Option(c, c)));
+            classSelect.value = currentClass;
+            
+            studentSelect.innerHTML = '<option value="">-- 2. เลือกนักเรียน --</option>';
+            bulkStudentList.innerHTML = '<p class="text-gray-500">กรุณาเลือกชั้นเรียน</p>';
+            
+            if (!currentClass) return;
+
+            const studentsInClass = Object.values(state.students)
+                .filter(s => s.class === currentClass)
+                .sort((a,b) => parseInt(a.no) - parseInt(b.no));
+
+            // Populate for single mode
+            studentsInClass.forEach(s => {
+                const fullName = `${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}`;
+                studentSelect.add(new Option(`${s.no} - ${fullName}`, s.id));
+            });
+
+            // Populate for bulk mode
+            if (studentsInClass.length > 0) {
+                bulkStudentList.innerHTML = '';
+                studentsInClass.forEach(s => {
+                    const div = document.createElement('div');
+                    const fullName = `${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}`;
+                    div.innerHTML = `
+                        <input type="checkbox" id="student-${s.id}" value="${s.id}" class="student-checkbox mr-2">
+                        <label for="student-${s.id}">${s.no}. ${fullName}</label>
+                    `;
+                    bulkStudentList.appendChild(div);
+                });
+            } else {
+                 bulkStudentList.innerHTML = '<p class="text-gray-500">ไม่มีนักเรียนในห้องนี้</p>';
+            }
+            filterAdminStudentDropdown();
+        }
+
+        function filterAdminStudentDropdown() {
+            const searchTerm = document.getElementById('search-student-admin').value.toLowerCase();
+            const studentSelect = document.getElementById('student-select-for-points');
+            const options = studentSelect.getElementsByTagName('option');
+
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                if (option.value === "") { // Always show placeholder
+                    option.style.display = "";
+                    continue;
+                }
+                const optionText = option.textContent.toLowerCase();
+                if (optionText.includes(searchTerm)) {
+                    option.style.display = "";
+                } else {
+                    option.style.display = "none";
+                }
+            }
+        }
+
+        function renderClassManagementButtons() {
+            classManagementButtons.innerHTML = '';
+            state.classes.forEach(className => {
+                const button = document.createElement('button');
+                button.textContent = `ห้อง ${className}`;
+                button.className = 'w-full p-3 bg-white rounded-lg shadow-sm border text-gray-700 hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-300';
+                button.onclick = () => openClassManagementModal(className);
+                classManagementButtons.appendChild(button);
+            });
+        }
+        
+        function openClassManagementModal(className) {
+            classModalTitle.textContent = `จัดการนักเรียนห้อง ${className}`;
+            classModalStudentList.innerHTML = '';
+            
+            const studentsInClass = Object.values(state.students)
+                .filter(s => s.class === className)
+                .sort((a,b) => parseInt(a.no) - parseInt(b.no));
+
+            if (studentsInClass.length > 0) {
+                studentsInClass.forEach(s => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center py-1';
+                    const fullName = `${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}`;
+                    li.innerHTML = `
+                        <span>${s.no}. ${fullName}</span>
+                        <button class="edit-student-btn text-sm bg-yellow-400 hover:bg-yellow-500 text-white py-1 px-2 rounded-md transition-transform hover:scale-105" data-id="${s.id}">แก้ไข</button>
+                    `;
+                    classModalStudentList.appendChild(li);
+                });
+            } else {
+                classModalStudentList.innerHTML = '<li class="text-center text-gray-500">ไม่มีนักเรียนในห้องนี้</li>';
+            }
+            
+            // Re-attach event listeners for edit buttons inside the modal
+            classModalStudentList.querySelectorAll('.edit-student-btn').forEach(btn => btn.addEventListener('click', handleEditStudent));
+            
+            classModalAddStudentBtn.dataset.class = className; // Set class context for adding new student
+            classManagementModal.style.display = 'block';
+        }
+
+        async function handleEditStudent(e) {
+            const studentId = e.target.dataset.id;
+            const student = state.students[studentId];
+            if (!student) return;
+            const fullName = `${student.prefix || ''}${student.firstName || ''} ${student.lastName || ''}`;
+
+            const { value: formValues } = await Swal.fire({
+                title: `แก้ไขข้อมูล: ${fullName}`,
+                html:
+                    `<input id="swal-input1" class="swal2-input" placeholder="เลขที่" value="${student.no}">` +
+                    `<input id="swal-input2" class="swal2-input" placeholder="คำนำหน้า (เช่น ด.ช.)" value="${student.prefix || ''}">` +
+                    `<input id="swal-input3" class="swal2-input" placeholder="ชื่อ" value="${student.firstName || ''}">` +
+                    `<input id="swal-input4" class="swal2-input" placeholder="นามสกุล" value="${student.lastName || ''}">`,
+                focusConfirm: false,
+                preConfirm: () => [
+                    document.getElementById('swal-input1').value,
+                    document.getElementById('swal-input2').value,
+                    document.getElementById('swal-input3').value,
+                    document.getElementById('swal-input4').value
+                ]
+            });
+
+            if (formValues) {
+                const [newNo, newPrefix, newFirstName, newLastName] = formValues;
+                if (!newNo || !newFirstName || !newLastName) {
+                    Swal.fire('ผิดพลาด', 'กรุณากรอก เลขที่, ชื่อ และนามสกุลให้ครบ', 'error');
+                    return;
+                }
+                
+                const newId = `${student.class}-${newNo}`;
+                if (newNo !== student.no && state.students[newId]) {
+                    Swal.fire('ซ้ำ!', `มีนักเรียนเลขที่ ${newNo} อยู่ในห้องนี้แล้ว`, 'error');
+                    return;
+                }
+                
+                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                try {
+                    const payload = { 
+                        action: 'editStudent', className: student.class, 
+                        oldStudentNo: student.no, newStudentNo: newNo,
+                        newStudentPrefix: newPrefix, newStudentFirstName: newFirstName, newStudentLastName: newLastName
+                    };
+                    const response = await fetch(APP_SCRIPT_URL, {
+                        method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        // Update state
+                        delete state.students[studentId];
+                        state.students[newId] = { ...student, id: newId, no: newNo, prefix: newPrefix, firstName: newFirstName, lastName: newLastName };
+                        saveState();
+                        // Refresh the modal content
+                        openClassManagementModal(student.class);
+                        Swal.fire('สำเร็จ!', 'แก้ไขข้อมูลนักเรียนเรียบร้อย', 'success');
+                    } else { throw new Error(result.message); }
+                } catch (error) {
+                    Swal.fire('เกิดข้อผิดพลาด!', `ไม่สามารถแก้ไขข้อมูลได้: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function handleAddStudentToClass(e) {
+            const className = e.target.dataset.class;
+             const { value: formValues } = await Swal.fire({
+                title: `เพิ่มนักเรียนในห้อง ${className}`,
+                html:
+                    `<input id="swal-input1" class="swal2-input" placeholder="เลขที่">` +
+                    `<input id="swal-input2" class="swal2-input" placeholder="คำนำหน้า (เช่น ด.ช.)">` +
+                    `<input id="swal-input3" class="swal2-input" placeholder="ชื่อ">` +
+                    `<input id="swal-input4" class="swal2-input" placeholder="นามสกุล">`,
+                focusConfirm: false,
+                preConfirm: () => [
+                    document.getElementById('swal-input1').value,
+                    document.getElementById('swal-input2').value,
+                    document.getElementById('swal-input3').value,
+                    document.getElementById('swal-input4').value
+                ]
+            });
+
+            if (formValues) {
+                const [studentNo, prefix, firstName, lastName] = formValues;
+                if (!studentNo || !firstName || !lastName) {
+                    Swal.fire('ข้อมูลไม่ครบ!', 'กรุณากรอก เลขที่, ชื่อ และนามสกุลให้ครบถ้วน', 'warning');
+                    return;
+                }
+                
+                // Add student and refresh modal on success
+                const studentId = `${className}-${studentNo}`;
+                if (state.students[studentId]) { Swal.fire('ซ้ำ!', 'มีนักเรียนเลขที่นี้ในชั้นเรียนนี้แล้ว (ในแอป)', 'error'); return; }
+                
+                Swal.fire({ title: 'กำลังเพิ่มนักเรียน...', text: `กำลังเพิ่ม ${prefix}${firstName} ลงในชีตห้อง ${className}`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                try {
+                    const payload = { action: 'addStudent', className, studentNo, studentPrefix: prefix, studentFirstName: firstName, studentLastName: lastName };
+                    const response = await fetch(APP_SCRIPT_URL, {
+                        method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        state.students[studentId] = {
+                            id: studentId, no: studentNo, 
+                            prefix: prefix, firstName: firstName, lastName: lastName,
+                            class: className, points: 0, history: []
+                        };
+                        saveState();
+                        openClassManagementModal(className); // Refresh modal
+                        Swal.fire('สำเร็จ!', `เพิ่มนักเรียน ${prefix}${firstName} ในชั้นเรียน ${className} แล้ว`, 'success');
+                    } else { throw new Error(result.message || 'Unknown error'); }
+                } catch (error) { Swal.fire('เกิดข้อผิดพลาด!', `ไม่สามารถเพิ่มนักเรียนได้: ${error.message}`, 'error'); }
+            }
+        }
+
+        async function handlePointUpdate(isAdding) {
+            let points = Math.abs(parseInt(document.getElementById('points-input').value));
+            const reason = document.getElementById('reason-input').value;
+
+            if (isNaN(points) || points <= 0 || !reason) {
+                Swal.fire('ข้อมูลไม่ครบ!', 'กรุณาใส่จำนวนแต้ม (ต้องมากกว่า 0) และเหตุผล', 'warning');
+                return;
+            }
+            if (!isAdding) { points = -points; }
+            
+            const selectedStudentIds = [];
+            if (state.adminPointMode === 'single') {
+                const singleId = document.getElementById('student-select-for-points').value;
+                if(singleId) selectedStudentIds.push(singleId);
+            } else {
+                document.querySelectorAll('.student-checkbox:checked').forEach(cb => selectedStudentIds.push(cb.value));
+            }
+
+            if (selectedStudentIds.length === 0) {
+                Swal.fire('ยังไม่ได้เลือก!', 'กรุณาเลือกนักเรียนที่ต้องการให้คะแนน', 'warning');
+                return;
+            }
+            
+            Swal.fire({ title: 'กำลังบันทึกข้อมูล...', text: `กำลังให้คะแนนนักเรียน ${selectedStudentIds.length} คน`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            // Local update first for instant UI feedback
+            const historyEntry = { date: new Date().toISOString(), reason: reason, points: points };
+            selectedStudentIds.forEach(id => {
+                state.students[id].points += points;
+                state.students[id].history.push(historyEntry);
+            });
+            saveState();
+            render();
+            document.getElementById('points-input').value = '';
+            document.getElementById('reason-input').value = '';
+            
+            // Sync with Google Sheet
+            const className = document.getElementById('class-select-for-points').value;
+            const studentNos = selectedStudentIds.map(id => state.students[id].no);
+            const payload = {
+                action: 'bulkUpdatePoints',
+                className: className,
+                studentNos: studentNos,
+                points: points,
+                reason: reason,
+            };
+
+            try {
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: 'POST', redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    Swal.fire('สำเร็จ!', `บันทึกแต้มและประวัติของนักเรียน ${selectedStudentIds.length} คนแล้ว`, 'success');
+                } else { throw new Error(result.message || 'Unknown error from Apps Script'); }
+            } catch (error) {
+                console.error('Error syncing with Google Sheet:', error);
+                Swal.fire({ title: 'เกิดข้อผิดพลาด!', text: 'ไม่สามารถบันทึกข้อมูลลง Google Sheet ได้: ' + error.message, icon: 'error' });
+            }
+        }
+        
+        async function addClass() {
+            const className = document.getElementById('new-class-name').value.trim();
+            if (!className) { Swal.fire('ข้อมูลไม่ครบ!', 'กรุณาใส่ชื่อชั้นเรียน', 'warning'); return; }
+            if (state.classes.includes(className)) { Swal.fire('ซ้ำ!', 'มีชั้นเรียนนี้อยู่แล้ว', 'error'); return; }
+
+            Swal.fire({ title: 'กำลังสร้างห้องเรียน...', text: `กำลังสร้างชีตสำหรับห้อง ${className}`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const payload = { action: 'addClass', className: className };
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    state.classes.push(className);
+                    state.classes.sort();
+                    saveState();
+                    renderAdminPanel();
+                    document.getElementById('new-class-name').value = '';
+                    Swal.fire('สำเร็จ!', `เพิ่มชั้นเรียน ${className} และสร้างชีตเรียบร้อยแล้ว`, 'success');
+                } else { throw new Error(result.message || 'Unknown error'); }
+            } catch (error) { Swal.fire('เกิดข้อผิดพลาด!', `ไม่สามารถสร้างห้องเรียนได้: ${error.message}`, 'error'); }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('show-login-btn').addEventListener('click', showLogin);
+        document.getElementById('back-to-scoreboard-btn').addEventListener('click', showDashboard);
+        document.getElementById('login-btn').addEventListener('click', () => {
+            if (document.getElementById('password').value === 'teacher123') { 
+                state.loggedIn = true; saveState(); showDashboard();
+            } else { Swal.fire('รหัสผ่านไม่ถูกต้อง!', 'กรุณาลองใหม่อีกครั้ง', 'error'); }
+        });
+        
+        // Teacher Menu Dropdown
+        teacherMenuBtn.addEventListener('click', () => teacherMenuDropdown.classList.toggle('hidden'));
+        document.getElementById('fetch-gs-btn').addEventListener('click', (e) => { e.preventDefault(); fetchFromGoogleSheet(); teacherMenuDropdown.classList.add('hidden'); });
+        document.getElementById('admin-panel-btn').addEventListener('click', (e) => { e.preventDefault(); showAdminPanel(); teacherMenuDropdown.classList.add('hidden'); });
+        document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); state.loggedIn = false; saveState(); render(); });
+
+        // Leaderboard Filters
+        filterIndividualBtn.addEventListener('click', () => { state.leaderboardView = 'individual'; saveState(); render(); });
+        filterClassBtn.addEventListener('click', () => { state.leaderboardView = 'class'; saveState(); render(); });
+
+        // Class Sort Filters
+        sortByNoBtn.addEventListener('click', () => handleSort('no'));
+        sortByPointsBtn.addEventListener('click', () => handleSort('points'));
+        
+        // Admin Point Mode
+        modeSingleBtn.addEventListener('click', () => {
+            state.adminPointMode = 'single';
+            saveState();
+            updatePointManagementUI();
+        });
+        modeBulkBtn.addEventListener('click', () => {
+            state.adminPointMode = 'bulk';
+            saveState();
+            updatePointManagementUI();
+        });
+
+        document.getElementById('class-select-for-points').addEventListener('change', populatePointManagementSelectors);
+        selectAllCheckbox.addEventListener('change', (e) => {
+            document.querySelectorAll('.student-checkbox').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+
+        document.getElementById('back-to-dashboard-btn').addEventListener('click', showDashboard);
+        document.getElementById('add-points-btn').addEventListener('click', () => handlePointUpdate(true));
+        document.getElementById('remove-points-btn').addEventListener('click', () => handlePointUpdate(false));
+        document.getElementById('add-class-btn').addEventListener('click', addClass);
+        document.getElementById('search-student-admin').addEventListener('input', filterAdminStudentDropdown);
+        
+        // Modal Listeners
+        document.getElementById('rules-btn').addEventListener('click', () => { rulesModal.style.display = 'block'; });
+        historyModal.querySelector('.close-btn').addEventListener('click', () => { historyModal.style.display = 'none'; });
+        rulesModal.querySelector('.close-btn').addEventListener('click', () => { rulesModal.style.display = 'none'; });
+        classManagementModal.querySelector('.close-btn').addEventListener('click', () => { classManagementModal.style.display = 'none'; });
+        classModalAddStudentBtn.addEventListener('click', handleAddStudentToClass);
+
+        window.addEventListener('click', (event) => { 
+            if (event.target == historyModal) historyModal.style.display = "none"; 
+            if (event.target == rulesModal) rulesModal.style.display = "none";
+            if (event.target == classManagementModal) classManagementModal.style.display = "none";
+            if (teacherMenuBtn && !teacherMenuBtn.contains(event.target) && !teacherMenuDropdown.contains(event.target)) {
+                teacherMenuDropdown.classList.add('hidden');
+            }
+        });
+
+        initializeApp();
+    </script>
+
+</body>
+</html>
+
