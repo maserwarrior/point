@@ -420,27 +420,8 @@
         
         // Natural Sort for class names like "ม.1/1", "ม.1/11"
         function naturalSort(a, b) {
-            const re = /(\d+)/g;
-            const aParts = a.split(re);
-            const bParts = b.split(re);
-
-            for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
-                const aPart = aParts[i];
-                const bPart = bParts[i];
-
-                if (i % 2 === 1) { // It's a number part
-                    const aNum = parseInt(aPart, 10);
-                    const bNum = parseInt(bPart, 10);
-                    if (aNum !== bNum) {
-                        return aNum - bNum;
-                    }
-                } else { // It's a string part
-                    if (aPart !== bPart) {
-                        return aPart.localeCompare(bPart);
-                    }
-                }
-            }
-            return a.length - b.length;
+            const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+            return collator.compare(a, b);
         }
 
         function render() {
@@ -592,10 +573,11 @@
                         <th class="p-3 text-center">ดูประวัติ</th>
                     </tr>`;
             } else {
+                let secondColumnHeader = state.classSort.key === 'points' ? 'อันดับ' : 'เลขที่';
                 tableHeader.innerHTML = `
                      <tr class="border-b border-slate-200">
                         <th class="p-3"></th>
-                        <th class="p-3">เลขที่</th>
+                        <th class="p-3 text-center">${secondColumnHeader}</th>
                         <th class="p-3 whitespace-nowrap">ชื่อ - สกุล</th>
                         <th class="p-3 text-center whitespace-nowrap">ฉายา</th>
                         <th class="p-3 text-center">แต้มสะสม ⭐</th>
@@ -634,13 +616,13 @@
                     const badge = getBadgeForStudent(student, index);
                     let rankDisplay = index + 1;
                     let rankClass = '';
-                    let flameClass = '';
-                    if(index === 0) { rankDisplay = '🥇'; rankClass = 'rank-1'; flameClass = 'flaming-gold';}
-                    if(index === 1) { rankDisplay = '🥈'; rankClass = 'rank-2'; flameClass = 'flaming-silver';}
-                    if(index === 2) { rankDisplay = '🥉'; rankClass = 'rank-3'; flameClass = 'flaming-bronze';}
+                    let rankSize = 'text-2xl'; 
+                    if(index === 0) { rankDisplay = '🥇'; rankClass = 'rank-1'; rankSize = 'text-4xl';}
+                    if(index === 1) { rankDisplay = '🥈'; rankClass = 'rank-2'; rankSize = 'text-4xl';}
+                    if(index === 2) { rankDisplay = '🥉'; rankClass = 'rank-3'; rankSize = 'text-4xl';}
                     row.className = `border-b border-slate-200 hover:shadow-lg transition-all duration-200 ${rankClass || (index % 2 !== 0 ? 'bg-violet-50' : 'bg-white')}`;
                     row.innerHTML = `
-                        <td class="p-3 font-bold text-center ${flameClass}">${rankDisplay}</td>
+                        <td class="p-3 font-bold text-center ${rankSize}">${rankDisplay}</td>
                         <td class="p-3 font-medium text-slate-800 flex items-center gap-3 whitespace-nowrap">
                             <span class="text-2xl">${getAvatarForStudent(student.id)}</span>
                             <span>${fullName}</span>
@@ -654,16 +636,27 @@
                     `;
                 } else {
                      const badge = getBadgeForStudent(student, -1);
-                     let flameClass = '';
-                     if (state.classSort.key === 'points' && state.classSort.order === 'desc' && index < 3) {
-                         if (index === 0) flameClass = 'flaming-gold';
-                         if (index === 1) flameClass = 'flaming-silver';
-                         if (index === 2) flameClass = 'flaming-bronze';
+                     let secondColumnContent;
+                     if (state.classSort.key === 'points') {
+                        let rankDisplay;
+                        let rankSize = 'text-2xl';
+                        if (state.classSort.order === 'desc') {
+                            rankDisplay = index + 1;
+                            if (index === 0) { rankDisplay = '🥇'; rankSize = 'text-4xl'; }
+                            if (index === 1) { rankDisplay = '🥈'; rankSize = 'text-4xl'; }
+                            if (index === 2) { rankDisplay = '🥉'; rankSize = 'text-4xl'; }
+                        } else {
+                            rankDisplay = studentsToDisplay.length - index;
+                        }
+                        secondColumnContent = `<td class="p-3 text-center font-bold ${rankSize}">${rankDisplay}</td>`;
+                     } else {
+                        secondColumnContent = `<td class="p-3">${student.no}</td>`;
                      }
+
                      row.className = `border-b border-slate-200 hover:shadow-lg transition-all duration-200 ${(index % 2 !== 0 ? 'bg-violet-50' : 'bg-white')}`;
                      row.innerHTML = `
                         <td class="p-3 text-2xl">${getAvatarForStudent(student.id)}</td>
-                        <td class="p-3 ${flameClass}">${student.no}</td>
+                        ${secondColumnContent}
                         <td class="p-3 font-medium text-slate-800 whitespace-nowrap">${fullName}</td>
                         <td class="p-3 text-center whitespace-nowrap">${badge.text ? `<span class="text-xs font-semibold px-2 py-1 rounded-full ${badge.class}">${badge.text}</span>` : ''}</td>
                         <td class="p-3 text-center font-bold text-lg text-blue-500">${student.points}</td>
@@ -726,7 +719,7 @@
                 if(index === 2) { rankDisplay = '🥉'; rankClass = 'rank-3'; }
                 row.className = `border-b border-slate-200 hover:scale-[1.01] hover:shadow-md transition-all duration-200 ${rankClass || (index % 2 !== 0 ? 'bg-slate-50' : 'bg-white')}`;
                 row.innerHTML = `
-                    <td class="p-3 font-bold text-center">${rankDisplay}</td>
+                    <td class="p-3 font-bold text-center text-3xl">${rankDisplay}</td>
                     <td class="p-3 font-medium text-lg text-slate-800">${classItem.className}</td>
                     <td class="p-3 text-center font-bold text-xl text-blue-500">${classItem.avgPoints}</td>
                     <td class="p-3 text-center text-slate-500">${classItem.totalPoints}</td>
@@ -1242,3 +1235,4 @@
 
 </body>
 </html>
+
