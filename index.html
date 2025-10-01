@@ -420,8 +420,27 @@
         
         // Natural Sort for class names like "ม.1/1", "ม.1/11"
         function naturalSort(a, b) {
-            const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-            return collator.compare(a, b);
+            const re = /(\d+)/g;
+            const aParts = a.split(re);
+            const bParts = b.split(re);
+
+            for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
+                const aPart = aParts[i];
+                const bPart = bParts[i];
+
+                if (i % 2 === 1) { // It's a number part
+                    const aNum = parseInt(aPart, 10);
+                    const bNum = parseInt(bPart, 10);
+                    if (aNum !== bNum) {
+                        return aNum - bNum;
+                    }
+                } else { // It's a string part
+                    if (aPart !== bPart) {
+                        return aPart.localeCompare(bPart);
+                    }
+                }
+            }
+            return a.length - b.length;
         }
 
         function render() {
@@ -1223,6 +1242,3 @@
 
 </body>
 </html>
-
-
-
