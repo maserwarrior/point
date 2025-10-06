@@ -1275,66 +1275,59 @@
         }
         
         async function announceMission() {
-    const newMissionTextEl = document.getElementById('new-mission-text');
-    const newMissionImageEl = document.getElementById('new-mission-image'); // ใช้ input type="file"
+            const newMissionTextEl = document.getElementById('new-mission-text');
+            const newMissionImageFileEl = document.getElementById('new-mission-image-file');
 
-    if (!newMissionTextEl || !newMissionImageEl) {
-        Swal.fire('เกิดข้อผิดพลาด!', 'ไม่พบช่องกรอกข้อมูล', 'error');
-        return;
-    }
+            const missionText = newMissionTextEl.value.trim();
+            const file = newMissionImageFileEl.files[0];
 
-    const missionText = newMissionTextEl.value.trim();
-    const missionFile = newMissionImageEl.files[0]; // ดึงไฟล์ที่เลือก
+            if (!missionText) {
+                Swal.fire('ข้อมูลไม่ครบ!', 'กรุณาใส่ข้อความภารกิจ', 'warning');
+                return;
+            }
+            
+            Swal.fire({ title: 'กำลังประกาศภารกิจ...', text: file ? 'กำลังอัปโหลดรูปภาพ...' : '', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-    if (!missionText) {
-        Swal.fire('ข้อมูลไม่ครบ!', 'กรุณาใส่ข้อความภารกิจ', 'warning');
-        return;
-    }
+            let payload = { action: 'announceMission', missionText };
 
-    if (!missionFile) {
-        Swal.fire('ข้อมูลไม่ครบ!', 'กรุณาเลือกรูปภาพภารกิจ', 'warning');
-        return;
-    }
-
-    Swal.fire({
-        title: 'กำลังประกาศภารกิจ...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
-
-    // ใช้ FormData สำหรับส่งข้อความ + ไฟล์ไป Apps Script
-    const formData = new FormData();
-    formData.append("action", "announceMission");
-    formData.append("missionText", missionText);
-    formData.append("missionImage", missionFile);
-
-    try {
-        const response = await fetch(APP_SCRIPT_URL, {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            state.mission = {
-                text: missionText,
-                imageUrl: result.imageUrl, // รับ URL กลับมาจาก Apps Script
-                timestamp: new Date().getTime()
-            };
-            render();
-
-            // เคลียร์ค่า input
-            newMissionTextEl.value = '';
-            newMissionImageEl.value = '';
-
-            Swal.fire('สำเร็จ!', 'ประกาศภารกิจเรียบร้อยแล้ว', 'success');
-        } else {
-            throw new Error(result.message || 'Unknown error');
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const fileData = reader.result;
+                    payload.fileData = fileData;
+                    payload.mimeType = file.type;
+                    sendMissionPayload(payload);
+                };
+                reader.onerror = error => {
+                    Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถอ่านไฟล์รูปภาพได้', 'error');
+                };
+            } else {
+                sendMissionPayload(payload);
+            }
         }
-    } catch (error) {
-        Swal.fire('เกิดข้อผิดพลาด!', `ไม่สามารถประกาศภารกิจได้: ${error.message}`, 'error');
-    }
-}
+
+        async function sendMissionPayload(payload) {
+            try {
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    state.mission = { text: payload.missionText, imageUrl: result.imageUrl || '', timestamp: new Date().getTime() };
+                    render();
+                    document.getElementById('new-mission-text').value = '';
+                    document.getElementById('new-mission-image-file').value = '';
+                    Swal.fire('สำเร็จ!', 'ประกาศภารกิจเรียบร้อยแล้ว', 'success');
+                } else { throw new Error(result.message || 'Unknown error'); }
+            } catch (error) {
+                Swal.fire('เกิดข้อผิดพลาด!', `ไม่สามารถประกาศภารกิจได้: ${error.message}`, 'error');
+            }
+        }
+
         // --- Event Listeners ---
         document.getElementById('show-login-btn').addEventListener('click', showLogin);
         document.getElementById('back-to-scoreboard-btn').addEventListener('click', showDashboard);
@@ -1419,3 +1412,4 @@
 
 </body>
 </html>
+
