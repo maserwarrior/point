@@ -230,7 +230,7 @@
             <div class="admin-section">
                 <h3 class="font-semibold text-xl mb-3 text-slate-800">ประกาศภารกิจ 🎯</h3>
                 <textarea id="new-mission-text" class="w-full p-2 border rounded-lg" rows="3" placeholder="ใส่ข้อความภารกิจที่นี่..."></textarea>
-                <input type="file" id="new-mission-image-file" class="w-full p-2 border rounded-lg mt-2 bg-slate-100 text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                <input type="text" id="new-mission-image-url" class="w-full p-2 border rounded-lg mt-2" placeholder="URL รูปภาพ (ถ้ามี)">
                 <button id="announce-mission-btn" class="mt-2 w-full btn-primary font-semibold py-2 px-4 rounded-lg">ประกาศภารกิจ</button>
             </div>
             
@@ -1276,20 +1276,38 @@
         
         async function announceMission() {
             const newMissionTextEl = document.getElementById('new-mission-text');
-            const newMissionImageUrlEl = document.getElementById('new-mission-image-url');
+            const newMissionImageFileEl = document.getElementById('new-mission-image-file');
 
             const missionText = newMissionTextEl.value.trim();
-            const missionImageUrl = newMissionImageUrlEl.value.trim();
+            const file = newMissionImageFileEl.files[0];
 
             if (!missionText) {
                 Swal.fire('ข้อมูลไม่ครบ!', 'กรุณาใส่ข้อความภารกิจ', 'warning');
                 return;
             }
             
-            Swal.fire({ title: 'กำลังประกาศภารกิจ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังประกาศภารกิจ...', text: file ? 'กำลังอัปโหลดรูปภาพ...' : '', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-            const payload = { action: 'announceMission', missionText, missionImageUrl };
+            let payload = { action: 'announceMission', missionText };
 
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const fileData = reader.result;
+                    payload.fileData = fileData;
+                    payload.mimeType = file.type;
+                    sendMissionPayload(payload);
+                };
+                reader.onerror = error => {
+                    Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถอ่านไฟล์รูปภาพได้', 'error');
+                };
+            } else {
+                sendMissionPayload(payload);
+            }
+        }
+
+        async function sendMissionPayload(payload) {
             try {
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
@@ -1299,10 +1317,10 @@
                 });
                 const result = await response.json();
                 if (result.status === 'success') {
-                    state.mission = { text: missionText, imageUrl: missionImageUrl, timestamp: new Date().getTime() };
+                    state.mission = { text: payload.missionText, imageUrl: result.imageUrl || '', timestamp: new Date().getTime() };
                     render();
-                    newMissionTextEl.value = '';
-                    newMissionImageUrlEl.value = '';
+                    document.getElementById('new-mission-text').value = '';
+                    document.getElementById('new-mission-image-file').value = '';
                     Swal.fire('สำเร็จ!', 'ประกาศภารกิจเรียบร้อยแล้ว', 'success');
                 } else { throw new Error(result.message || 'Unknown error'); }
             } catch (error) {
