@@ -142,7 +142,7 @@
         <!-- Dashboard / Student View -->
         <div id="dashboard-view">
             <header class="flex flex-col md:flex-row justify-between items-center mb-6">
-                <h1 class="text-5xl font-bold main-title">🎮 Board of Destiny กระดานแห่งโชคชะตา</h1>
+                <h1 class="text-5xl font-bold main-title">🎮 POINT COLLECTOR</h1>
                 <div class="mt-4 md:mt-0 flex items-center space-x-2">
                      <button id="rules-btn" class="bg-white hover:bg-gray-100 text-slate-600 font-semibold py-2 px-4 rounded-lg shadow-sm border border-slate-200 transition-all duration-300 hover:transform hover:-translate-y-0.5">📜 กติกา</button>
                     <!-- Login Button for Guests/Students -->
@@ -165,6 +165,13 @@
                     </div>
                 </div>
             </header>
+
+            <!-- Mission Board -->
+            <div id="mission-board" class="hidden content-card p-4 rounded-xl mb-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg">
+                <h3 class="font-bold text-lg mb-2 flex items-center gap-2"><span class="text-2xl">🎯</span> ภารกิจปัจจุบัน</h3>
+                <img id="mission-image" src="" class="hidden w-full h-48 object-contain rounded-md mb-2">
+                <p id="mission-text" class="text-sm"></p>
+            </div>
             
             <!-- Tabs for Classes -->
             <div id="class-tabs" class="flex items-center gap-3 mb-6 pb-3 overflow-x-auto">
@@ -217,6 +224,14 @@
                 <button id="back-to-dashboard-btn" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all hover:transform hover:-translate-y-0.5"> &lt; กลับไป Dashboard</button>
             </div>
 
+            <!-- Mission Management -->
+            <div class="admin-section">
+                <h3 class="font-semibold text-xl mb-3 text-slate-800">ประกาศภารกิจ 🎯</h3>
+                <textarea id="new-mission-text" class="w-full p-2 border rounded-lg" rows="3" placeholder="ใส่ข้อความภารกิจที่นี่..."></textarea>
+                <input type="file" id="new-mission-image-file" class="w-full p-2 border rounded-lg mt-2 bg-slate-100 text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                <button id="announce-mission-btn" class="mt-2 w-full btn-primary font-semibold py-2 px-4 rounded-lg">ประกาศภารกิจ</button>
+            </div>
+            
             <!-- Point Management -->
             <div class="admin-section">
                 <h3 class="font-semibold text-xl mb-4 text-slate-800">จัดการแต้ม ➕➖</h3>
@@ -259,7 +274,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input type="number" id="points-input" class="p-2 border rounded-lg" placeholder="จำนวนแต้ม (ใส่เลขบวกเท่านั้น)" min="0">
-                    <input type="text" id="reason-input" class="p-2 border rounded-lg" placeholder="เหตุผล (เช่น ส่งงานตรงเวลา ทำความดีในชั้นเรียน เป้นต้น)">
+                    <input type="text" id="reason-input" class="p-2 border rounded-lg" placeholder="เหตุผล (เช่น ส่งงาน)">
                 </div>
                 <div class="mt-4 text-center space-x-2">
                     <button id="add-points-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-all hover:transform hover:-translate-y-0.5">เพิ่มแต้ม</button>
@@ -284,15 +299,36 @@
         </div>
     </div>
 
-    <!-- History Modal -->
-    <div id="history-modal" class="modal">
+    <!-- Student Profile Modal -->
+    <div id="profile-modal" class="modal">
         <div class="modal-content">
             <div class="flex justify-between items-center pb-3 border-b border-slate-300">
-                <h3 id="modal-student-name" class="text-xl font-bold">ประวัติคะแนน</h3>
+                <h3 id="modal-student-name" class="text-xl font-bold">โปรไฟล์นักเรียน</h3>
                 <span class="close-btn text-3xl font-bold cursor-pointer transition-transform hover:rotate-90">&times;</span>
             </div>
-            <div id="modal-body" class="py-4 max-h-80 overflow-y-auto">
-                <!-- History items will be here -->
+            
+            <div class="py-4">
+                <div class="mb-4 text-center">
+                    <div class="inline-flex rounded-lg shadow-sm">
+                        <button id="profile-history-btn" class="px-5 py-2 text-sm font-semibold bg-white border border-slate-300 text-slate-600 rounded-l-lg transition-all duration-300">
+                            📜 ประวัติ
+                        </button>
+                        <button id="profile-graph-btn" class="px-5 py-2 text-sm font-semibold bg-white border-t border-b border-r border-slate-300 text-slate-600 rounded-r-lg transition-all duration-300">
+                            📈 กราฟ
+                        </button>
+                    </div>
+                </div>
+
+                <div id="profile-graph-view" class="hidden">
+                    <h4 class="font-semibold text-lg mb-2">การพัฒนาคะแนน</h4>
+                    <canvas id="profile-chart-canvas"></canvas>
+                </div>
+                <div id="profile-history-view" class="max-h-[60vh] overflow-y-auto">
+                    <h4 class="font-semibold text-lg mb-2">ประวัติคะแนน</h4>
+                    <div id="modal-body">
+                        <!-- History items will be here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -336,7 +372,7 @@
 
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPCtXfigpfdXVVAKkKhX_jzgSfU922lSftrIr80gSte8ZRufK72PMjARudsJ1wSMZ3/exec';
+        let APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPCtXfigpfdXVVAKkKhX_jzgSfU922lSftrIr80gSte8ZRufK72PMjARudsJ1wSMZ3/exec';
         const LEADERBOARD_KEY = '🏆 Leaderboard รวม';
         const CLASS_LEADERBOARD_KEY = '🏫 อันดับห้องเรียน';
         
@@ -347,7 +383,7 @@
         const studentList = document.getElementById('student-list');
         const tableHeader = document.getElementById('table-header');
         const classTabs = document.getElementById('class-tabs');
-        const historyModal = document.getElementById('history-modal');
+        const profileModal = document.getElementById('profile-modal');
         const rulesModal = document.getElementById('rules-modal');
         const classManagementModal = document.getElementById('class-management-modal');
         const modalStudentName = document.getElementById('modal-student-name');
@@ -378,7 +414,13 @@
             'bg-cyan-200 text-cyan-800',
             'bg-teal-200 text-teal-800',
         ];
+        const profileGraphBtn = document.getElementById('profile-graph-btn');
+        const profileHistoryBtn = document.getElementById('profile-history-btn');
+        const profileGraphView = document.getElementById('profile-graph-view');
+        const profileHistoryView = document.getElementById('profile-history-view');
 
+        
+        let profileChart = null;
         
         // --- State ---
         let state = {
@@ -388,7 +430,8 @@
             leaderboardView: 'individual', // 'individual' or 'class'
             classSort: { key: 'no', order: 'asc' }, // { key: 'no' | 'points', order: 'asc' | 'desc' }
             loggedIn: false,
-            adminPointMode: 'single' // 'single' or 'bulk'
+            adminPointMode: 'single', // 'single' or 'bulk'
+            mission: { text: '', timestamp: null, imageUrl: '' }
         };
 
         // --- App Logic ---
@@ -399,6 +442,7 @@
             if (state.classes.length === 0) {
                 fetchFromGoogleSheet();
             }
+            document.getElementById('announce-mission-btn').addEventListener('click', announceMission);
         }
 
         function loadState() {
@@ -408,6 +452,7 @@
                 if (!state.leaderboardView) state.leaderboardView = 'individual';
                 if (!state.classSort) state.classSort = { key: 'no', order: 'asc' };
                 if (!state.adminPointMode) state.adminPointMode = 'single';
+                if (!state.mission) state.mission = { text: '', timestamp: null, imageUrl: '' };
                 Object.values(state.students).forEach(student => {
                     if (!student.history) student.history = [];
                 });
@@ -429,6 +474,7 @@
             renderDynamicControls();
             renderStudentList();
             updateUIVisibility();
+            renderMissionBoard();
         }
 
         function updateUIVisibility() {
@@ -441,6 +487,38 @@
                 teacherControls.classList.add('hidden');
                 teacherMenuDropdown.classList.add('hidden');
                 showLoginBtn.classList.remove('hidden');
+            }
+        }
+        
+        function renderMissionBoard() {
+            if (state.mission && state.mission.text) {
+                document.getElementById('mission-text').textContent = state.mission.text;
+                const missionImage = document.getElementById('mission-image');
+                if(state.mission.imageUrl) {
+                    missionImage.src = state.mission.imageUrl;
+                    missionImage.classList.remove('hidden');
+                } else {
+                    missionImage.classList.add('hidden');
+                }
+                document.getElementById('mission-board').classList.remove('hidden');
+            } else {
+                document.getElementById('mission-board').classList.add('hidden');
+            }
+        }
+        
+        function checkAndShowNewMission() {
+            const lastSeenTimestamp = localStorage.getItem('seenMissionTimestamp');
+            if (state.mission && state.mission.timestamp && state.mission.timestamp > lastSeenTimestamp) {
+                Swal.fire({
+                    title: '🎯 ภารกิจใหม่!',
+                    text: state.mission.text,
+                    imageUrl: state.mission.imageUrl || undefined,
+                    imageWidth: 400,
+                    imageAlt: 'Mission Image',
+                    confirmButtonText: 'รับทราบ!'
+                }).then(() => {
+                    localStorage.setItem('seenMissionTimestamp', state.mission.timestamp);
+                });
             }
         }
 
@@ -570,7 +648,7 @@
                         <th class="p-3 text-center whitespace-nowrap">ฉายา</th>
                         <th class="p-3">ชั้นเรียน</th>
                         <th class="p-3 text-center">แต้มสะสม ⭐</th>
-                        <th class="p-3 text-center">ดูประวัติ</th>
+                        <th class="p-3 text-center">ดูโปรไฟล์</th>
                     </tr>`;
             } else {
                 let secondColumnHeader = state.classSort.key === 'points' ? 'อันดับ' : 'เลขที่';
@@ -581,7 +659,7 @@
                         <th class="p-3 whitespace-nowrap">ชื่อ - สกุล</th>
                         <th class="p-3 text-center whitespace-nowrap">ฉายา</th>
                         <th class="p-3 text-center">แต้มสะสม ⭐</th>
-                        <th class="p-3 text-center">ดูประวัติ</th>
+                        <th class="p-3 text-center">ดูโปรไฟล์</th>
                     </tr>`;
             }
 
@@ -631,7 +709,7 @@
                         <td class="p-3">${student.class}</td>
                         <td class="p-3 text-center font-bold text-lg text-blue-500">${student.points}</td>
                         <td class="p-3 text-center">
-                            <button class="view-history-btn bg-purple-500 hover:bg-purple-600 text-white text-sm py-1 px-3 rounded-full transition-transform hover:scale-110" data-id="${student.id}">📜 ดู</button>
+                            <button class="view-profile-btn bg-purple-500 hover:bg-purple-600 text-white text-sm py-1 px-3 rounded-full transition-transform hover:scale-110" data-id="${student.id}">📜 ดู</button>
                         </td>
                     `;
                 } else {
@@ -661,15 +739,15 @@
                         <td class="p-3 text-center whitespace-nowrap">${badge.text ? `<span class="text-xs font-semibold px-2 py-1 rounded-full ${badge.class}">${badge.text}</span>` : ''}</td>
                         <td class="p-3 text-center font-bold text-lg text-blue-500">${student.points}</td>
                         <td class="p-3 text-center">
-                            <button class="view-history-btn bg-purple-500 hover:bg-purple-600 text-white text-sm py-1 px-3 rounded-full transition-transform hover:scale-110" data-id="${student.id}">📜 ดู</button>
+                            <button class="view-profile-btn bg-purple-500 hover:bg-purple-600 text-white text-sm py-1 px-3 rounded-full transition-transform hover:scale-110" data-id="${student.id}">📜 ดู</button>
                         </td>
                     `;
                 }
                 studentList.appendChild(row);
             });
             
-            document.querySelectorAll('.view-history-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => showHistory(e.target.dataset.id));
+            document.querySelectorAll('.view-profile-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => showProfileAndHistory(e.target.dataset.id));
             });
         }
         
@@ -729,19 +807,61 @@
             });
         }
         
-        function showHistory(studentId) {
+        function showProfileAndHistory(studentId) {
             const student = state.students[studentId];
             if (!student) return;
             
             const fullName = `${student.prefix || ''}${student.firstName || ''} ${student.lastName || ''}`;
-            modalStudentName.textContent = `ประวัติคะแนน: ${fullName}`;
+            modalStudentName.textContent = `โปรไฟล์: ${fullName}`;
             modalBody.innerHTML = '';
 
-            if (!student.history || student.history.length === 0) {
+            const sortedHistory = [...student.history].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Chart Data Processing
+            let cumulativePoints = 0;
+            const chartLabels = ['เริ่มต้น'];
+            const chartData = [0];
+
+            sortedHistory.forEach(item => {
+                cumulativePoints += item.points;
+                chartLabels.push(new Date(item.date).toLocaleDateString('th-TH'));
+                chartData.push(cumulativePoints);
+            });
+
+            // Chart Rendering
+            const ctx = document.getElementById('profile-chart-canvas').getContext('2d');
+            if (profileChart) {
+                profileChart.destroy();
+            }
+            profileChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'แต้มสะสม',
+                        data: chartData,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        segment: {
+                            borderColor: ctx => (ctx.p1.parsed.y < ctx.p0.parsed.y ? 'rgb(239, 68, 68)' : 'rgb(34, 197, 94)'),
+                            backgroundColor: ctx => (ctx.p1.parsed.y < ctx.p0.parsed.y ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)'),
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // History List Rendering
+            if (sortedHistory.length === 0) {
                 modalBody.innerHTML = '<p class="text-center text-slate-500">ยังไม่มีประวัติ</p>';
             } else {
                 const list = document.createElement('ul');
-                [...student.history].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(item => {
+                [...sortedHistory].reverse().forEach(item => { // Show newest first
                     const li = document.createElement('li');
                     li.className = 'flex justify-between items-center p-2 border-b border-slate-200';
                     const pointClass = item.points > 0 ? 'text-green-600' : 'text-red-600';
@@ -757,7 +877,14 @@
                 });
                 modalBody.appendChild(list);
             }
-            historyModal.style.display = 'block';
+
+            // Show history by default
+            profileHistoryView.classList.remove('hidden');
+            profileGraphView.classList.add('hidden');
+            profileHistoryBtn.classList.add('filter-btn-active');
+            profileGraphBtn.classList.remove('filter-btn-active');
+
+            profileModal.style.display = 'block';
         }
 
         // --- Data Fetching ---
@@ -772,9 +899,11 @@
         
         window.handleGsData = function(data) {
             if (data.error) { Swal.fire('เกิดข้อผิดพลาด!', data.error, 'error'); return; }
-            const newClasses = Object.keys(data).sort(naturalSort);
+            const newClasses = Object.keys(data).filter(k => k !== 'mission').sort(naturalSort);
             state.classes = newClasses;
             state.students = {};
+            state.mission = data.mission || { text: '', timestamp: null, imageUrl: '' };
+
             newClasses.forEach(className => {
                 data[className].forEach(gsStudent => {
                     const studentId = `${className}-${gsStudent.no}`;
@@ -796,6 +925,7 @@
             
             saveState();
             render();
+            checkAndShowNewMission();
             Swal.fire('สำเร็จ!', 'ดึงข้อมูลจาก Google Sheet เรียบร้อยแล้ว', 'success');
         }
 
@@ -1165,6 +1295,61 @@
                 } else { throw new Error(result.message || 'Unknown error'); }
             } catch (error) { Swal.fire('เกิดข้อผิดพลาด!', `ไม่สามารถสร้างห้องเรียนได้: ${error.message}`, 'error'); }
         }
+        
+        async function announceMission() {
+            const newMissionText = document.getElementById('new-mission-text');
+            const newMissionImageFile = document.getElementById('new-mission-image-file');
+
+            const missionText = newMissionText.value.trim();
+            const file = newMissionImageFile.files[0];
+
+            if (!missionText) {
+                Swal.fire('ข้อมูลไม่ครบ!', 'กรุณาใส่ข้อความภารกิจ', 'warning');
+                return;
+            }
+            
+            Swal.fire({ title: 'กำลังประกาศภารกิจ...', text: file ? 'กำลังอัปโหลดรูปภาพ...' : '', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            let payload = { action: 'announceMission', missionText, missionImageUrl: '' };
+
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const fileData = reader.result;
+                    payload.fileData = fileData;
+                    payload.mimeType = file.type;
+                    sendMissionPayload(payload);
+                };
+                reader.onerror = error => {
+                    Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถอ่านไฟล์รูปภาพได้', 'error');
+                };
+            } else {
+                sendMissionPayload(payload);
+            }
+        }
+
+        async function sendMissionPayload(payload) {
+            try {
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    state.mission = { text: payload.missionText, imageUrl: result.imageUrl || '', timestamp: new Date().getTime() };
+                    saveState();
+                    renderMissionBoard();
+                    document.getElementById('new-mission-text').value = '';
+                    document.getElementById('new-mission-image-file').value = '';
+                    Swal.fire('สำเร็จ!', 'ประกาศภารกิจเรียบร้อยแล้ว', 'success');
+                } else { throw new Error(result.message || 'Unknown error'); }
+            } catch (error) {
+                Swal.fire('เกิดข้อผิดพลาด!', `ไม่สามารถประกาศภารกิจได้: ${error.message}`, 'error');
+            }
+        }
 
         // --- Event Listeners ---
         document.getElementById('show-login-btn').addEventListener('click', showLogin);
@@ -1212,17 +1397,31 @@
         document.getElementById('add-points-btn').addEventListener('click', () => handlePointUpdate(true));
         document.getElementById('remove-points-btn').addEventListener('click', () => handlePointUpdate(false));
         document.getElementById('add-class-btn').addEventListener('click', addClass);
-        document.getElementById('search-student-admin').addEventListener('input', filterAdminStudentDropdown);
+        
         
         // Modal Listeners
         document.getElementById('rules-btn').addEventListener('click', () => { rulesModal.style.display = 'block'; });
-        historyModal.querySelector('.close-btn').addEventListener('click', () => { historyModal.style.display = 'none'; });
+        profileModal.querySelector('.close-btn').addEventListener('click', () => { profileModal.style.display = 'none'; });
         rulesModal.querySelector('.close-btn').addEventListener('click', () => { rulesModal.style.display = 'none'; });
         classManagementModal.querySelector('.close-btn').addEventListener('click', () => { classManagementModal.style.display = 'none'; });
         classModalAddStudentBtn.addEventListener('click', handleAddStudentToClass);
 
+        profileGraphBtn.addEventListener('click', () => {
+            profileGraphView.classList.remove('hidden');
+            profileHistoryView.classList.add('hidden');
+            profileGraphBtn.classList.add('filter-btn-active');
+            profileHistoryBtn.classList.remove('filter-btn-active');
+        });
+
+        profileHistoryBtn.addEventListener('click', () => {
+            profileHistoryView.classList.remove('hidden');
+            profileGraphView.classList.add('hidden');
+            profileHistoryBtn.classList.add('filter-btn-active');
+            profileGraphBtn.classList.remove('filter-btn-active');
+        });
+
         window.addEventListener('click', (event) => { 
-            if (event.target == historyModal) historyModal.style.display = "none"; 
+            if (event.target == profileModal) profileModal.style.display = "none"; 
             if (event.target == rulesModal) rulesModal.style.display = "none";
             if (event.target == classManagementModal) classManagementModal.style.display = "none";
             if (teacherMenuBtn && !teacherMenuBtn.contains(event.target) && !teacherMenuDropdown.contains(event.target)) {
@@ -1235,4 +1434,5 @@
 
 </body>
 </html>
+
 
