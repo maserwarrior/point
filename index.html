@@ -909,6 +909,23 @@
                 Swal.fire({ title: 'กำลังดึงข้อมูล...', text: 'กรุณารอสักครู่ 🔄', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             }
         }
+        fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec')
+            .then(res => res.json())
+            .then(data => {
+                console.log(data); // แสดงผล หรือเอาไปใช้งานต่อ
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลได้', 'error');
+            })
+            .finally(() => {
+            // ⬅️ สำคัญ
+                isFetching = false; // รีเซ็ตสถานะ
+                refreshBtn.innerHTML = originalBtnContent; // คืนปุ่ม
+                refreshBtn.disabled = false;
+                Swal.close(); // ปิด Swal
+            });
+        }
         window.handleGsData = function(data) {
             if (data.error) { Swal.fire('เกิดข้อผิดพลาด!', data.error, 'error'); return; }
             const newClasses = Object.keys(data).filter(k => k !== 'mission' && k !== 'rewards').sort(naturalSort);
