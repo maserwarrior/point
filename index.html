@@ -908,7 +908,7 @@
             if (!isSilent) {
                 Swal.fire({ title: 'กำลังดึงข้อมูล...', text: 'กรุณารอสักครู่ 🔄', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             }
-        
+        }
         window.handleGsData = function(data) {
             if (data.error) { Swal.fire('เกิดข้อผิดพลาด!', data.error, 'error'); return; }
             const newClasses = Object.keys(data).filter(k => k !== 'mission' && k !== 'rewards').sort(naturalSort);
