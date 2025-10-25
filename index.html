@@ -158,6 +158,7 @@
             color: #0e7490;
         }
     </style>
+</head>
 <body class="text-slate-700">
 
     <!-- Main Container -->
@@ -169,21 +170,21 @@
                 <h1 class="text-3xl font-bold text-slate-800 mb-2" style="font-family: 'Itim', cursive;">🧑‍🏫 สำหรับคุณครู</h1>
                 <p class="text-slate-500 mb-6">กรุณาเข้าสู่ระบบเพื่อจัดการข้อมูล</p>
                 <input type="password" id="password" class="w-full max-w-xs p-3 border rounded-lg mb-4 text-center">
-                <button id="login-btn" class="w-full max-w-xs btn-primary font-semibold py-3 px-4 rounded-lg shadow-md">เข้าสู่ระบบ</button>
-                <button id="back-to-scoreboard-btn" class="w-full max-w-xs bg-slate-500 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md mt-2 transition-all duration-300 hover:transform hover:-translate-y-0.5">กลับไปหน้าคะแนน</button>
+                <button id="login-btn" class="w-full max-w-xs btn btn-primary">เข้าสู่ระบบ</button>
+                <button id="back-to-scoreboard-btn" class="w-full max-w-xs btn btn-secondary mt-2">กลับไปหน้าคะแนน</button>
             </div>
         </div>
 
         <!-- Dashboard / Student View -->
         <div id="dashboard-view">
             <header class="flex flex-col md:flex-row justify-between items-center mb-6">
-                <h1 class="text-5xl font-bold main-title">🎮Board Of Destiny กระดานแห่งโชคชะตา</h1>
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold main-title whitespace-nowrap">🎮 Board Of Destiny กระดานแห่งโชคชะตา</h1>
                 <div class="mt-4 md:mt-0 flex items-center space-x-2">
-                     <button id="shop-btn" class="bg-white hover:bg-amber-100 text-amber-600 font-semibold py-2 px-8 rounded-lg shadow-sm border border-amber-200 transition-all duration-300 hover:transform hover:-translate-y-0.5">🎁 ร้านค้า</button>
-                     <button id="refresh-btn" class="bg-white hover:bg-gray-100 text-slate-600 font-semibold py-2 px-4 rounded-lg shadow-sm border border-slate-200 transition-all duration-300 hover:transform hover:-translate-y-0.5 flex items-center gap-2">🔄<span>รีเฟรช</span></button>
-                     <button id="rules-btn" class="bg-white hover:bg-gray-100 text-slate-600 font-semibold py-2 px-4 rounded-lg shadow-sm border border-slate-200 transition-all duration-300 hover:transform hover:-translate-y-0.5">📜 กติกา</button>
+                     <button id="shop-btn" class="btn btn-ghost-amber">🎁 ร้านค้า</button>
+                     <button id="refresh-btn" class="btn btn-ghost">🔄<span>รีเฟรช</span></button>
+                     <button id="rules-btn" class="btn btn-ghost">📜 กติกา</button>
                     <!-- Login Button for Guests/Students -->
-                    <button id="show-login-btn" class="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-300 hover:transform hover:-translate-y-0.5">🧑‍🏫 สำหรับครู</button>
+                    <button id="show-login-btn" class="btn btn-primary">🧑‍🏫 สำหรับครู</button>
                     <!-- Teacher Controls Dropdown -->
                     <div id="teacher-controls" class="hidden relative inline-block text-left">
                         <div>
@@ -218,10 +219,10 @@
             <!-- Leaderboard View Toggle -->
             <div id="leaderboard-filters" class="hidden mb-4 text-center">
                 <div class="inline-flex rounded-lg shadow-md">
-                    <button id="filter-individual-btn" class="px-5 py-2 text-sm font-semibold bg-white border border-slate-300 text-slate-600 rounded-l-lg transition-all duration-300 hover:bg-slate-100 hover:-translate-y-0.5 flex items-center gap-2">
+                    <button id="filter-individual-btn" class="btn btn-ghost rounded-r-none">
                         🧑‍🎓 อันดับนักเรียน
                     </button>
-                    <button id="filter-class-btn" class="px-5 py-2 text-sm font-semibold bg-white border-t border-b border-r border-slate-300 text-slate-600 rounded-r-lg transition-all duration-300 hover:bg-slate-100 hover:-translate-y-0.5 flex items-center gap-2">
+                    <button id="filter-class-btn" class="btn btn-ghost rounded-l-none border-l-0">
                         🏫 อันดับห้องเรียน
                     </button>
                 </div>
@@ -230,10 +231,10 @@
             <!-- Class Sort Toggle -->
             <div id="class-sort-filters" class="hidden mb-4 text-center">
                 <div class="inline-flex rounded-lg shadow-md">
-                    <button id="sort-by-no-btn" class="px-5 py-2 text-sm font-semibold bg-white border border-slate-300 text-slate-600 rounded-l-lg transition-all duration-300 hover:bg-slate-100 hover:-translate-y-0.5 flex items-center gap-2">
+                    <button id="sort-by-no-btn" class="btn btn-ghost rounded-r-none">
                         <!-- Content generated by JS -->
                     </button>
-                    <button id="sort-by-points-btn" class="px-5 py-2 text-sm font-semibold bg-white border-t border-b border-r border-slate-300 text-slate-600 rounded-r-lg transition-all duration-300 hover:bg-slate-100 hover:-translate-y-0.5 flex items-center gap-2">
+                    <button id="sort-by-points-btn" class="btn btn-ghost rounded-l-none border-l-0">
                         <!-- Content generated by JS -->
                     </button>
                 </div>
