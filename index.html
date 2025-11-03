@@ -507,7 +507,7 @@
             document.getElementById('announce-mission-btn').addEventListener('click', announceMission);
             document.getElementById('shop-btn').addEventListener('click', () => showRewardShop());
             redeemRewardBtn.addEventListener('click', (e) => showRewardShop(e.target.dataset.studentId));
-            setInterval(() => fetchFromGoogleSheet(true), 30000); // Auto-refresh every 30 seconds
+            setInterval(() => fetchFromGoogleSheet(true), 60000); // Auto-refresh every 60 seconds
         }
         
         // Natural Sort for class names like "ม.1/1", "ม.1/11"
