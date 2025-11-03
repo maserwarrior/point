@@ -507,7 +507,7 @@
             document.getElementById('announce-mission-btn').addEventListener('click', announceMission);
             document.getElementById('shop-btn').addEventListener('click', () => showRewardShop());
             redeemRewardBtn.addEventListener('click', (e) => showRewardShop(e.target.dataset.studentId));
-            setInterval(() => fetchFromGoogleSheet(true), 60000); // Auto-refresh every 60 seconds
+            setInterval(() => fetchFromGoogleSheet(true), 30000); // Auto-refresh every 30 seconds
         }
         
         // Natural Sort for class names like "ม.1/1", "ม.1/11"
@@ -589,7 +589,7 @@
             state.classes.forEach(className => {
                 const tab = document.createElement('button');
                 tab.textContent = className;
-                const activeClass = 'bg-gradient-to-r from-sky-500 to-blue-500 text-white border-blue-600 transform -translate-y-1 shadow-lg';
+                const activeClass = 'bg-gradient-to-r from-emerald-500 to-green-500 text-white border-green-600 transform -translate-y-1 shadow-lg';
                 const inactiveClass = 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:-translate-y-0.5';
                 tab.className = `${baseTabClass} ${state.activeClass === className ? activeClass : inactiveClass}`;
                 tab.onclick = () => { 
@@ -1608,4 +1608,5 @@
 
 </body>
 </html>
+
 
